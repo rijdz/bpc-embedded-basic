@@ -1,0 +1,1323 @@
+class ZCL_BPC_BASIC definition
+  public
+  final
+  create public .
+
+public section.
+
+  types TT_RANGE type UJ0_T_RANGE .
+  types TS_RANGE type UJ0_S_RANGE .
+
+*  types TS_ACTIVITY_DATA type ZTGRF_ACTIVITY .
+*  types:
+*    TT_ACTIVITY_DATA TYPE TABLE OF TS_ACTIVITY_DATA .
+  constants GA_CUBE_OPEX type RSD_INFOCUBE value 'ZOPEX' ##NO_TEXT.
+  constants GA_DSO_OPEX type RSD_INFOCUBE value 'ZFI_OPEX' ##NO_TEXT.
+  constants GA_DSO_CPX type RSD_INFOCUBE value 'ZFI_CPX' ##NO_TEXT.
+  constants GA_DSO_REV type RSD_INFOCUBE value 'ZFI_REV' ##NO_TEXT.
+
+  class-methods GET_INFOPROVIDER
+    importing
+      !IMI_RANGE type RSDRI_T_RANGE optional
+      !IM_INFOPROVIDER type RSD_INFOCUBE optional
+    exporting
+      !EXI_OPEX type ZTT_BPC_OPEX .
+*      !EXI_DSO_OPEX type ZTT_BPC_DSO_OPEX .
+  class-methods GET_HIERARCHY
+    importing
+      !IM_IOBJNM type RSIOBJNM
+    exporting
+      !EXI_HIERSTRUC type WRMA_TT_RSHIERSTRUC .
+  class-methods GET_INFOOBJECT
+    importing
+      !IM_CHAVL type RSD_CHAVL optional
+    exporting
+      !EXI_ZPOSTRULE type ZTT_BPC_IO_POSTRULE
+      !EXI_ZTACCOUNT type ZTT_BPC_IO_ZTACCOUNT
+      !EXI_ZBA type ZTT_BPC_IO_ZBA
+      !EXI_ZTTYPE type ZTT_BPC_IO_ZTTYPE
+      !EXI_ZPR type ZTT_BPC_IO_POSTRULE .
+*      !IMW_HEADER_DATA type ZTGRF_HEADER
+*      !IMI_DETAIL_ACTIVITY type ZCL_BPC_BASIC=>TT_ACTIVITY_DATA
+*    exporting
+*      !EXI_CONSOLIDATION type ZTT_BPC_CONSOLIDATION .
+  class-methods SAVE_ADSO
+    importing
+      !IM_RSOADSONM type RSOADSONM
+    exporting
+      !EXR_TABLESTRUC type DATA
+      !EX_GEN_SUCCESFUL type RS_BOOL .
+  class-methods SAVE_INFOCUBE
+    importing
+      !IMI_OPEX type ZTT_BPC_OPEX
+    exporting
+      !EXI_MESSAGE type RSDRI_TS_MSG .
+protected section.
+private section.
+
+  class-methods _APPEND_SFC
+    importing
+      !IM_CHANM type RSCHANM
+      !IM_CHAALIAS type RSALIAS
+    changing
+      !CHI_SFC type RSDRI_TH_SFC .
+  class-methods _APPEND_SFK
+    importing
+      !IM_KYFNM type RSKYFNM
+      !IM_KYFALIAS type RSALIAS
+      !IM_AGGR type RSAGGRGEN optional
+    changing
+      !CHI_SFK type RSDRI_TH_SFK .
+  class-methods _DSO_CREATE_DYNAMIC_MODEL
+    importing
+      !IM_RSOADSONM type RSOADSONM
+    exporting
+      !EXR_TABLESTRUC type DATA
+      !EXI_COMP_TAB type ABAP_COMPONENT_TAB .
+  class-methods _DSO_AGGR_GENERATE_METADATA
+    importing
+      !IM_ADSONM type RSOADSONM
+      !IM_AGGR_TYPE type IF_RSDSO_METADATA_GEN=>TN_AGGR_TYPE
+      !IMR_LOG type ref to CL_RSDSO_LOG
+      !IM_SEED type INT4
+    returning
+      value(RT_AGGR) type CL_RSDSO_DSOWRITER_API=>TN_T_AGGR .
+  class-methods _DSO_UPDATE_INBOUND_DATA
+    importing
+      !IM_ADSONM type RSOADSONM
+      !IMR_DATA type ref to DATA
+      !IMR_LOG type ref to CL_RSDSO_LOG
+      !IMI_AGGR type CL_RSDSO_DSOWRITER_API=>TN_T_AGGR
+    returning
+      value(R_REQUEST_TSN) type RSPM_REQUEST_TSN
+    raising
+      CX_RSDSO_PREPARE_FAILED
+      CX_RSDSO_UPDATE_FAILED
+      CX_RSDSO_RUNTIME_ERROR .
+  class-methods _DSO_ACTIVATE_REQUESTS
+    importing
+      !IM_ADSONM type RSOADSONM
+      !IMR_LOG type ref to CL_RSDSO_LOG
+    returning
+      value(RT_REQUEST_TSN) type RSDSO_T_TSN
+    raising
+      CX_RSDSO_ACTIVATION_FAILED
+      CX_RSDSO_PREPARE_FAILED .
+  class-methods _DSO_FILL_UP_DATA.
+*    importing
+*      !IMW_HEADER_DATA type ZTGRF_HEADER
+*      !IMI_DETAIL_ACTIVITY type ZCL_BPC_BASIC=>TT_ACTIVITY_DATA
+*    exporting
+*      !EXI_OPEX type ZTT_BPC_DSO_OPEX .
+  class-methods _CUBE_CREATE_STRUCTURE
+    importing
+      !IM_INFOCUBE type RSD_INFOCUBE
+    exporting
+      !EX_DATA type ref to DATA .
+  class-methods _CUBE_GET_DATA_DSO
+    importing
+      !IM_ADSONAME type RSD_INFOCUBE.
+*    exporting
+*      !EXI_DSO_OPEX type ZTT_BPC_DSO_OPEX .
+ENDCLASS.
+
+
+
+CLASS ZCL_BPC_BASIC IMPLEMENTATION.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Public Method ZCL_BPC_BASIC=>GET_HIERARCHY
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IM_IOBJNM                      TYPE        RSIOBJNM
+* | [<---] EXI_HIERSTRUC                  TYPE        WRMA_TT_RSHIERSTRUC
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD GET_HIERARCHY.
+
+    DATA: LW_HIEKEY    TYPE RSNDI_S_HIEKEY,
+          LW_HIESEL    TYPE RSNDI_S_HIESEL,
+          LW_HIEDIR    TYPE RSNDI_S_HIEDIR,
+          LI_HIERSTRUC TYPE TABLE OF RSHIERSTRUC,
+          LW_HIERSTRUC TYPE RSHIERSTRUC,
+          LI_MESSAGE   TYPE TABLE OF RSNDI_S_MESSAGE,
+          LW_MESSAGE   TYPE RSNDI_S_MESSAGE.
+    DATA: LV_IOBJNM TYPE RSIOBJNM,
+          LV_HIEID  TYPE RSHIEID,
+          LV_SUBRC  LIKE SY-SUBRC.
+
+    CONSTANTS: C_OBJVERS TYPE RSOBJVERS VALUE 'A'.
+
+*---------------------- Get Hierarchy ID ---------------------*
+    MOVE IM_IOBJNM TO LV_IOBJNM.
+    SELECT SINGLE HIEID INTO LV_HIEID
+      FROM RSHIEDIR
+      WHERE IOBJNM EQ LV_IOBJNM
+        AND HIENM EQ 'H1'.
+
+*---------------------- Get List of Hieararchy ---------------------*
+    CLEAR LW_HIEKEY.
+    LW_HIEKEY-HIEID = LV_HIEID.
+    LW_HIEKEY-OBJVERS = C_OBJVERS.
+
+    CLEAR LW_HIESEL.
+    LW_HIESEL-OBJVERS = C_OBJVERS.
+    LW_HIESEL-HIENM = 'H1'.
+    LW_HIESEL-IOBJNM = LV_IOBJNM.
+
+    CALL FUNCTION 'RSNDI_SHIE_STRUCTURE_GET'
+      EXPORTING
+        I_S_HIEKEY    = LW_HIEKEY
+        I_S_HIESEL    = LW_HIESEL
+      IMPORTING
+        E_S_HIEDIR    = LW_HIEDIR
+        E_SUBRC       = LV_SUBRC
+      TABLES
+        E_T_HIERSTRUC = LI_HIERSTRUC
+        E_T_MESSAGE   = LI_MESSAGE.
+
+    IF LI_HIERSTRUC[] IS NOT INITIAL.
+      EXI_HIERSTRUC[] = LI_HIERSTRUC[].
+    ENDIF.
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Public Method ZCL_BPC_BASIC=>GET_INFOOBJECT
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IM_CHAVL                       TYPE        RSD_CHAVL(optional)
+* | [<---] EXI_ZPOSTRULE                  TYPE        ZTT_BPC_IO_POSTRULE
+* | [<---] EXI_ZTACCOUNT                  TYPE        ZTT_BPC_IO_ZTACCOUNT
+* | [<---] EXI_ZBA                        TYPE        ZTT_BPC_IO_ZBA
+* | [<---] EXI_ZTTYPE                     TYPE        ZTT_BPC_IO_ZTTYPE
+* | [<---] EXI_ZPR                        TYPE        ZTT_BPC_IO_POSTRULE
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD GET_INFOOBJECT.
+
+    DATA: LI_ZTACCOUNT TYPE ZTT_BPC_IO_ZTACCOUNT,
+          LI_ZPOSTRULE TYPE ZTT_BPC_IO_ZTACCOUNT.
+    DATA: LO_DATA  TYPE REF TO DATA,
+          LOW_DATA TYPE REF TO DATA.
+    DATA: LV_IOBJNM TYPE RSDIOBJ-IOBJNM,
+          LV_CHKTTY TYPE TTYPENAME,
+          LV_CHKTAB TYPE RSDCHKVIEW,
+          LV_CHAVL  TYPE RSD_CHAVL.
+    DATA: LW_VIOBJ TYPE RSD_S_VIOBJ.
+    FIELD-SYMBOLS: <LI_MASTER_DATA> TYPE ANY TABLE,
+                   <LW_MASTER_DATA> TYPE ANY.
+*
+**&---------------------------------------------------------------------*
+**& INITIALIZATION
+**&---------------------------------------------------------------------*
+
+    IF IM_CHAVL IS NOT INITIAL.
+      MOVE IM_CHAVL TO LV_CHAVL.
+    ENDIF.
+
+**---------------------- Determine Info Object ---------------------*
+    IF EXI_ZPOSTRULE IS REQUESTED.
+      LV_IOBJNM = 'ZPOSTRULE'.
+    ELSEIF exi_zpr IS REQUESTED.
+      LV_IOBJNM = 'ZPR'.
+    ELSEIF EXI_ZTACCOUNT IS REQUESTED.
+      LV_IOBJNM = 'ZTACCOUNT'.
+    ELSEIF EXI_ZBA IS REQUESTED.
+      LV_IOBJNM = 'ZBA'.
+    ELSEIF EXI_ZTTYPE IS REQUESTED.
+      LV_IOBJNM = 'ZTTYPE'.
+    ENDIF.
+
+    CALL FUNCTION 'RSD_IOBJ_GET'
+      EXPORTING
+        I_IOBJNM       = LV_IOBJNM
+      IMPORTING
+        E_S_VIOBJ      = LW_VIOBJ
+      EXCEPTIONS
+        IOBJ_NOT_FOUND = 1
+        ILLEGAL_INPUT  = 2
+        OTHERS         = 3.
+    IF SY-SUBRC <> 0.
+*      MESSAGE ID SY-MSGID TYPE 'E' NUMBER SY-MSGNO
+*          WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4
+*          RAISING READ_ERROR.
+    ENDIF.
+
+*- Get structure of Info Object -------------------------*
+    CALL FUNCTION 'RSD_CHKTAB_GET_FOR_CHA_BAS'
+      EXPORTING
+        I_CHABASNM = LW_VIOBJ-CHABASNM
+      IMPORTING
+        E_CHKTAB   = LV_CHKTAB
+      EXCEPTIONS
+        NAME_ERROR = 1
+        OTHERS     = 2.
+    IF SY-SUBRC <> 0.
+*      MESSAGE ID SY-MSGID TYPE 'E' NUMBER SY-MSGNO
+*            WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4
+*            RAISING READ_ERROR.
+
+    ENDIF.
+*
+*- Get Tabletypes of Info Object ---------------------*
+    CALL FUNCTION 'RSD_TABTYPES_GET_FOR_CHA_BAS'
+      EXPORTING
+        I_CHABASNM = LV_IOBJNM
+      IMPORTING
+        E_CHKTTY   = LV_CHKTTY
+      EXCEPTIONS
+        NAME_ERROR = 1
+        OTHERS     = 2.
+    IF SY-SUBRC <> 0.
+*      MESSAGE ID SY-MSGID TYPE 'E' NUMBER SY-MSGNO
+*             WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4
+*             RAISING READ_ERROR.
+    ENDIF.
+
+    CREATE DATA LO_DATA TYPE (LV_CHKTTY).
+    ASSIGN LO_DATA->* TO <LI_MASTER_DATA>.
+    CREATE DATA LOW_DATA TYPE (LV_CHKTAB).
+    ASSIGN LOW_DATA->* TO <LW_MASTER_DATA>.
+*
+*
+**&---------------------------------------------------------------------*
+**& GET DATA
+**&---------------------------------------------------------------------*
+
+    IF LV_CHAVL IS NOT INITIAL.
+
+      CALL FUNCTION 'RSAU_READ_MASTER_DATA'
+        EXPORTING
+          I_IOBJNM                = LV_IOBJNM
+          I_CHAVL                 = LV_CHAVL
+        IMPORTING
+          E_STRUCTURE             = <LW_MASTER_DATA>
+        EXCEPTIONS
+          READ_ERROR              = 1
+          NO_SUCH_ATTRIBUTE       = 2
+          WRONG_IMPORT_PARAMETERS = 3
+          CHAVL_NOT_FOUND         = 4
+          OTHERS                  = 5.
+      IF SY-SUBRC <> 0.
+* Implement suitable error handling here
+      ENDIF.
+
+    ELSE.
+
+      CALL FUNCTION 'RSAU_READ_MASTER_DATA'
+        EXPORTING
+          I_IOBJNM                = LV_IOBJNM
+          I_FLG_WHOLE_TABLE       = 'X'
+        IMPORTING
+          E_TABLE                 = <LI_MASTER_DATA>
+        EXCEPTIONS
+          READ_ERROR              = 1
+          NO_SUCH_ATTRIBUTE       = 2
+          WRONG_IMPORT_PARAMETERS = 3
+          CHAVL_NOT_FOUND         = 4
+          OTHERS                  = 5.
+      IF SY-SUBRC <> 0.
+* Implement suitable error handling here
+      ENDIF.
+
+    ENDIF.
+
+*
+**&---------------------------------------------------------------------*
+**& RESULT
+**&---------------------------------------------------------------------*
+    IF EXI_ZPOSTRULE IS REQUESTED.
+      EXI_ZPOSTRULE[] = <LI_MASTER_DATA>[].
+    ELSEIF exi_zpr IS REQUESTED.
+      EXI_ZPR[] = <LI_MASTER_DATA>[].
+    ELSEIF EXI_ZTACCOUNT IS REQUESTED.
+      EXI_ZTACCOUNT[] = <LI_MASTER_DATA>[].
+    ELSEIF EXI_ZBA IS REQUESTED .
+      EXI_ZBA[] = <LI_MASTER_DATA>[].
+    ELSEIF EXI_ZTTYPE IS REQUESTED.
+      EXI_ZTTYPE[] = <LI_MASTER_DATA>[].
+    ENDIF.
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Public Method ZCL_BPC_BASIC=>GET_INFOPROVIDER
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IMI_RANGE                      TYPE        RSDRI_T_RANGE(optional)
+* | [--->] IM_INFOPROVIDER                TYPE        RSD_INFOCUBE(optional)
+* | [<---] EXI_OPEX                       TYPE        ZTT_BPC_OPEX
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD GET_INFOPROVIDER.
+
+    DATA:LI_OPEX     TYPE ZTT_BPC_OPEX,
+         LW_OPEX     TYPE ZST_BPC_OPEX.
+*         LI_DSO_OPEX TYPE ZTT_BPC_DSO_OPEX,
+*         LW_DSO_OPEX TYPE ZST_BPC_DSO_OPEX.
+*         li_capex TYPE ztt_bpc_capex,
+*         lw_capex TYPE zst_bpc_capex.
+    DATA: WA_SFC         TYPE RSDRI_S_SFC,
+          LI_SFC         TYPE RSDRI_TH_SFC,
+          WA_SFK         TYPE RSDRI_S_SFK,
+          LI_SFK         TYPE RSDRI_TH_SFK,
+          WA_RANGE       TYPE RSDRI_S_RANGE,
+          LI_RANGE       TYPE RSDRI_T_RANGE,
+          WA_LIST_FIELDS TYPE RSDP0_S_FIELD,
+          LI_LIST_FIELDS TYPE RSDP0_T_FIELD.
+    DATA: LV_END_OF_DATA TYPE RS_BOOL,
+          LV_FIRST_CALL  TYPE RS_BOOL,
+          LV_KYFNM       TYPE RSKYFNM,
+          LV_ALIAS       TYPE RSALIAS,
+          LV_CHANM       TYPE RSCHANM,
+          LV_INFOCUBE    TYPE RSD_INFOCUBE,
+          LV_VSTRUCT     TYPE RSVIEWTIOBJNM2.
+    DATA: L_R_S_VSTRUCT TYPE REF TO DATA.
+
+
+    FIELD-SYMBOLS: <L_T_VSTRUCT> TYPE ANY TABLE,
+                   <L_S_VSTRUCT> TYPE ANY.
+
+    DEFINE MC_RANGE_CHA.
+      CLEAR &1.
+      &1-SIGN = 'I'.
+      &1-COMPOP = 'EQ'.
+      &1-LOW = &3.
+      &1-CHANM = &2.
+      APPEND &1 TO &4.
+    END-OF-DEFINITION.
+
+*&---------------------------------------------------------------------*
+*& INITIALIZATION
+*&---------------------------------------------------------------------*
+    LV_END_OF_DATA = RS_C_FALSE.
+    LV_FIRST_CALL = RS_C_TRUE.
+
+    LI_RANGE[] = IMI_RANGE[].
+
+*---------------------- Get Structure of Infoprovider ---------------------*
+    IF IM_INFOPROVIDER IS NOT INITIAL.
+      LV_INFOCUBE = IM_INFOPROVIDER.
+    ELSE.
+      IF EXI_OPEX IS REQUESTED.
+        LV_INFOCUBE = GA_CUBE_OPEX.
+*    ELSEIF EXI_CAPEX IS REQUESTED.
+*      LV_INFOCUBE = 'ZCAPEX'.
+      ENDIF.
+    ENDIF.
+
+    CALL FUNCTION 'RSD_TNAMES_GET_FOR_CUBE'
+      EXPORTING
+        I_INFOCUBE     = LV_INFOCUBE
+      IMPORTING
+        E_VIEWTIOBJNM2 = LV_VSTRUCT
+      EXCEPTIONS
+        NAME_ERROR     = 1
+        OTHERS         = 2.
+    IF SY-SUBRC <> 0.
+*      RAISE ILLEGAL_INPUT.
+    ENDIF.
+
+    CREATE DATA L_R_S_VSTRUCT TYPE STANDARD TABLE OF (LV_VSTRUCT)
+          WITH DEFAULT KEY INITIAL SIZE 0.
+    ASSIGN L_R_S_VSTRUCT->* TO <L_T_VSTRUCT>.
+
+*---------------------- Get List of IO Infoprovider ---------------------*
+    PERFORM SET_FIELD_INFO IN PROGRAM SAPLRSDRI
+      USING    <L_T_VSTRUCT>
+      CHANGING LI_LIST_FIELDS.
+
+    LOOP AT LI_LIST_FIELDS INTO WA_LIST_FIELDS.
+
+      MOVE WA_LIST_FIELDS-FIELDNAME TO LV_KYFNM.
+      MOVE WA_LIST_FIELDS-FIELDNAME TO LV_CHANM.
+      MOVE WA_LIST_FIELDS-FIELDNAME TO LV_ALIAS.
+
+      IF WA_LIST_FIELDS-FIELDNAME EQ '0CHNGID'
+        OR WA_LIST_FIELDS-FIELDNAME EQ '0RECORDTP'
+        OR WA_LIST_FIELDS-FIELDNAME EQ '0REQUID'.
+
+        CONTINUE.
+
+      ELSEIF WA_LIST_FIELDS-FIELDNAME EQ 'SIGN_DT'.
+        _APPEND_SFK( EXPORTING IM_KYFNM    = LV_KYFNM IM_KYFALIAS = LV_ALIAS
+                 CHANGING CHI_SFK = LI_SFK ).
+      ELSEIF WA_LIST_FIELDS-FIELDNAME EQ '1ROWCOUNT'.
+        _APPEND_SFK( EXPORTING IM_KYFNM    = LV_KYFNM IM_KYFALIAS = LV_ALIAS IM_AGGR = 'CNT'
+                 CHANGING CHI_SFK = LI_SFK ).
+      ELSE.
+        _APPEND_SFC( EXPORTING IM_CHANM    = LV_CHANM  IM_CHAALIAS = LV_ALIAS
+                 CHANGING CHI_SFC = LI_SFC ).
+      ENDIF.
+
+
+    ENDLOOP.
+
+*&---------------------------------------------------------------------*
+*& CREATE RANGE
+*&---------------------------------------------------------------------*
+*    MC_RANGE_CHA WA_RANGE 'ZSTATUS' 'SUBMIT' LI_RANGE.
+
+*&---------------------------------------------------------------------*
+*& PROCESSING
+*&---------------------------------------------------------------------*
+
+    WHILE LV_END_OF_DATA = RS_C_FALSE.
+      CALL FUNCTION 'RSDRI_INFOPROV_READ'
+        EXPORTING
+          I_INFOPROV             = LV_INFOCUBE
+          I_TH_SFC               = LI_SFC
+          I_TH_SFK               = LI_SFK
+          I_T_RANGE              = LI_RANGE
+          I_REFERENCE_DATE       = SY-DATUM
+          I_SAVE_IN_TABLE        = RS_C_FALSE
+          I_SAVE_IN_FILE         = RS_C_FALSE
+          I_PACKAGESIZE          = -1
+          I_MAXROWS              = 0
+          I_AUTHORITY_CHECK      = RSDRC_C_AUTHCHK-READ
+          I_CURRENCY_CONVERSION  = RS_C_TRUE
+          I_USE_AGGREGATES       = RS_C_TRUE
+          I_ROLLUP_ONLY          = RS_C_TRUE
+          I_READ_ODS_DELTA       = RS_C_FALSE
+          I_USE_DB_AGGREGATION   = RS_C_TRUE
+        IMPORTING
+          E_T_DATA               = <L_T_VSTRUCT>
+          E_END_OF_DATA          = LV_END_OF_DATA
+        CHANGING
+          C_FIRST_CALL           = LV_FIRST_CALL
+        EXCEPTIONS
+          ILLEGAL_INPUT          = 1
+          ILLEGAL_INPUT_SFC      = 2
+          ILLEGAL_INPUT_SFK      = 3
+          ILLEGAL_INPUT_RANGE    = 4
+          ILLEGAL_INPUT_TABLESEL = 5
+          NO_AUTHORIZATION       = 6
+          ILLEGAL_DOWNLOAD       = 7
+          ILLEGAL_TABLENAME      = 8
+          TRANS_NO_WRITE_MODE    = 9
+          INHERITED_ERROR        = 10
+          X_MESSAGE              = 11
+          NO_COMMIT_FREE_READ    = 12
+          OTHERS                 = 13.
+      IF SY-SUBRC <> 0.
+* IMPLEMENT SUITABLE ERROR HANDLING HERE
+      ENDIF.
+
+    ENDWHILE.
+
+*&---------------------------------------------------------------------*
+*& EXPORT OUTPUT
+*&---------------------------------------------------------------------*
+
+**- OPEX ---------------------*
+    IF LV_INFOCUBE = GA_CUBE_OPEX.
+      LOOP AT <L_T_VSTRUCT> ASSIGNING <L_S_VSTRUCT>.
+        MOVE-CORRESPONDING <L_S_VSTRUCT> TO LW_OPEX.
+        APPEND LW_OPEX TO LI_OPEX.
+      ENDLOOP.
+      EXI_OPEX[] = LI_OPEX[].
+
+*- CAPEX ---------------------*
+*    ELSEIF EXI_capex is REQUESTED.
+
+*- DSO Opex ------------------------------------------------*
+    ELSEIF LV_INFOCUBE = GA_DSO_OPEX.
+*      LOOP AT <L_T_VSTRUCT> ASSIGNING <L_S_VSTRUCT>.
+*        MOVE-CORRESPONDING <L_S_VSTRUCT> TO LW_DSO_OPEX.
+*        APPEND LW_DSO_OPEX TO LI_DSO_OPEX.
+*      ENDLOOP.
+*      EXI_DSO_OPEX[] = LI_DSO_OPEX[].
+    ENDIF.
+
+
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Public Method ZCL_BPC_BASIC=>SAVE_ADSO
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IM_RSOADSONM                   TYPE        RSOADSONM
+* | [<---] EXR_TABLESTRUC                 TYPE        DATA
+* | [<---] EX_GEN_SUCCESFUL               TYPE        RS_BOOL
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD SAVE_ADSO.
+
+    DATA: LV_RSOADSONM   TYPE RSOADSONM,
+          LV_SEED        TYPE INT4,
+          LV_AGGR_TYPE   TYPE IF_RSDSO_METADATA_GEN=>TN_AGGR_TYPE,
+          LV_MSG         TYPE STRING,
+          LV_UPD_REQ_TSN TYPE RSPM_REQUEST_TSN,
+          LV_ACT_REQ_TSN TYPE RSDSO_T_TSN.
+    DATA: LR_DATA             TYPE REF TO DATA,
+          LRS_DATA            TYPE REF TO DATA,
+          LR_LOG              TYPE REF TO CL_RSDSO_LOG,
+          LR_GEN_FAILED       TYPE REF TO CX_STATIC_CHECK,
+          LR_OPERATION_FAILED TYPE REF TO CX_RSDSO_ROOT.
+    DATA: "LI_DSO_OPEX TYPE ZTT_BPC_DSO_OPEX,
+          "LW_DSO_OPEX TYPE ZST_BPC_DSO_OPEX,
+          LI_COMP_TAB TYPE ABAP_COMPONENT_TAB,
+          LW_COMP_TAB LIKE LINE OF LI_COMP_TAB.
+    DATA:   LT_AGGR TYPE CL_RSDSO_DSOWRITER_API=>TN_T_AGGR.
+
+    FIELD-SYMBOLS: <LT_DATA>  TYPE TABLE,
+                   <LS_DATA>  TYPE ANY,
+                   <FS_VALUE> TYPE ANY.
+
+    MOVE IM_RSOADSONM TO LV_RSOADSONM.
+
+*---------------------- Create Structure ---------------------*
+    _DSO_CREATE_DYNAMIC_MODEL(
+      EXPORTING
+        IM_RSOADSONM   = LV_RSOADSONM
+      IMPORTING
+        EXI_COMP_TAB = LI_COMP_TAB
+        EXR_TABLESTRUC = LR_DATA ).
+
+    ASSIGN LR_DATA->* TO <LT_DATA>.
+    CREATE DATA LRS_DATA LIKE LINE OF <LT_DATA>.
+    ASSIGN LRS_DATA->* TO <LS_DATA>.
+
+    "this for temporary logic
+    "it supposed to be from input from selection-screen
+*---------------------- Fill Up Data ---------------------*
+    IF IM_RSOADSONM EQ GA_DSO_OPEX.
+*      CALL METHOD ZCL_BPC_BASIC=>_DSO_FILL_UP_DATA
+*        EXPORTING
+*          IMW_HEADER_DATA     = IMW_HEADER_DATA
+*          IMI_DETAIL_ACTIVITY = IMI_DETAIL_ACTIVITY
+*        IMPORTING
+*          EXI_OPEX            = LI_DSO_OPEX.
+    ENDIF.
+
+
+    "transforms into data type
+*    LOOP AT LI_DSO_OPEX INTO LW_DSO_OPEX.
+*
+*      LOOP AT LI_COMP_TAB INTO LW_COMP_TAB.
+*
+*        ASSIGN COMPONENT LW_COMP_TAB-NAME OF STRUCTURE <LS_DATA>
+*            TO <FS_VALUE>.
+*
+*        CASE LW_COMP_TAB-NAME.
+*          WHEN '/BIC/ZSTATUS'.
+*            MOVE LW_DSO_OPEX-ZSTATUS TO <FS_VALUE>.
+*          WHEN '/BIC/ZRPTCURR'.
+*            MOVE LW_DSO_OPEX-ZRPTCURR TO <FS_VALUE>.
+*          WHEN '/BIC/ZACCOUNT'.
+*            MOVE LW_DSO_OPEX-ZACCOUNT TO <FS_VALUE>.
+*          WHEN '/BIC/ZCOSTCTR'.
+*            MOVE LW_DSO_OPEX-ZCOSTCTR TO <FS_VALUE>.
+*          WHEN '/BIC/ZENTITY'.
+*            MOVE LW_DSO_OPEX-ZENTITY TO <FS_VALUE>.
+*          WHEN '/BIC/ZCYCLE'.
+*            MOVE LW_DSO_OPEX-ZCYCLE TO <FS_VALUE>.
+*          WHEN '/BIC/ZCATEGORY'.
+*            MOVE LW_DSO_OPEX-ZCYCLE TO <FS_VALUE>.
+*          WHEN '/BIC/ZRAB'.
+*            MOVE LW_DSO_OPEX-ZRAB TO <FS_VALUE>.
+*          WHEN '/BIC/ZBUSAREA'.
+*            MOVE LW_DSO_OPEX-ZBUSAREA TO <FS_VALUE>.
+*          WHEN '/BIC/ZACTIVITY'.
+*            MOVE LW_DSO_OPEX-ZACTIVITY TO <FS_VALUE>.
+*          WHEN 'FISCPER'.
+*            MOVE LW_DSO_OPEX-0FISCPER TO <FS_VALUE>.
+*          WHEN '/BIC/SGNDT_1'.
+*            MOVE LW_DSO_OPEX-SGNDT_1 TO <FS_VALUE>.
+*          WHEN '/BIC/SGNDT_QTY'.
+*            MOVE LW_DSO_OPEX-SGNDT_QTY TO <FS_VALUE>.
+*          WHEN 'FISCVARNT'.
+*            MOVE LW_DSO_OPEX-0FISCVARNT TO <FS_VALUE>.
+*          WHEN OTHERS.
+*        ENDCASE.
+*
+*      ENDLOOP.
+*
+*      APPEND <LS_DATA> TO <LT_DATA>.
+*
+*    ENDLOOP.
+
+
+
+*&---------------------------------------------------------------------*
+*& PUSH DATA INTO ADSO
+*&---------------------------------------------------------------------*
+
+    TRY.
+*---------------------- Initialize  ---------------------*
+        "Generate Seed
+        LV_SEED = CL_ABAP_RANDOM=>SEED( ).
+
+        "Generate Log
+        LR_LOG = NEW CL_RSDSO_LOG( ).
+        LR_LOG->ADD_SY_MSG( ).
+        LR_LOG->DETLEVEL_INC( ).
+        MESSAGE I015(RSDSO_TEST) WITH LV_SEED INTO LV_MSG.
+        LR_LOG->ADD_SY_MSG( ).
+
+        "Aggregation Type
+        LV_AGGR_TYPE = IF_RSDSO_METADATA_GEN=>CN_AGGR_TYPE-DEF.
+
+        "Generate Aggregation
+        LT_AGGR       = _DSO_AGGR_GENERATE_METADATA(
+                  IM_ADSONM                    = LV_RSOADSONM
+                  IM_SEED                      = LV_SEED
+                  IMR_LOG                      = LR_LOG
+                  IM_AGGR_TYPE                 = LV_AGGR_TYPE ).
+
+        "Status Message
+        LR_LOG->DETLEVEL_DEC( ).
+        MESSAGE I003(RSDSO_TEST) INTO LV_MSG.
+        LR_LOG->ADD_SY_MSG( ).
+        LR_LOG->DETLEVEL_INC( ).
+
+*---------------------- Processing Push Data into DSO ---------------------*
+        LV_UPD_REQ_TSN = _DSO_UPDATE_INBOUND_DATA(
+            IM_ADSONM                    = LV_RSOADSONM
+            IMR_LOG                      = LR_LOG
+            IMR_DATA                     = LR_DATA
+            IMI_AGGR                     = LT_AGGR ).
+
+        IF LV_UPD_REQ_TSN IS INITIAL.
+          EX_GEN_SUCCESFUL = ABAP_FALSE.
+        ELSE.
+          EX_GEN_SUCCESFUL = ABAP_TRUE.
+        ENDIF.
+
+*---------------------- Activation Data ---------------------*
+        " status message
+        MESSAGE I004(RSDSO_TEST) INTO LV_MSG.
+        LR_LOG->ADD_SY_MSG( ).
+        LR_LOG->DETLEVEL_INC( ).
+
+        LV_ACT_REQ_TSN = _DSO_ACTIVATE_REQUESTS(
+           IM_ADSONM                  = LV_RSOADSONM
+           IMR_LOG                     = LR_LOG  ).
+
+*&---------------------------------------------------------------------*
+*& LOG
+*&---------------------------------------------------------------------*
+        " status message
+        LR_LOG->DETLEVEL_DEC( ).
+        MESSAGE I005(RSDSO_TEST) INTO LV_MSG.
+        LR_LOG->ADD_SY_MSG( ).
+
+*---------------------- Display Log ---------------------*
+        TRY.
+            LR_LOG->DISPLAY( ).
+          CATCH CX_RSADSO_EXCEPTION.
+        ENDTRY.
+
+*---------------------- Error Handling ---------------------*
+      CATCH CX_RSDSO_TEST_FAILED
+          CX_RSDSO_METADATA_ERROR
+          CX_RS_NOT_FOUND INTO LR_GEN_FAILED.
+
+        " status message
+        LR_LOG->DETLEVEL_DEC( ).
+        MESSAGE I006(RSDSO_TEST) INTO LV_MSG.
+        LR_LOG->ADD_SY_MSG( ).
+
+        MESSAGE LR_GEN_FAILED TYPE 'I' DISPLAY LIKE 'E'.
+
+      CATCH CX_RSDSO_PREPARE_FAILED
+            CX_RSDSO_UPDATE_FAILED
+            CX_RSDSO_ACTIVATION_FAILED
+            CX_RSDSO_RUNTIME_ERROR INTO LR_OPERATION_FAILED.
+
+        " status message
+        LR_LOG->DETLEVEL_DEC( ).
+        MESSAGE I006(RSDSO_TEST) INTO LV_MSG.
+        LR_LOG->ADD_SY_MSG( ).
+
+        IF LR_OPERATION_FAILED->LOG_REF IS BOUND.
+          TRY.
+              LR_OPERATION_FAILED->LOG_REF->DISPLAY( ).
+            CATCH CX_RSADSO_EXCEPTION.
+          ENDTRY.
+          EX_GEN_SUCCESFUL = ABAP_FALSE.
+        ELSE.
+
+          EX_GEN_SUCCESFUL = ABAP_TRUE.
+
+        ENDIF.
+
+    ENDTRY.
+
+
+
+
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Public Method ZCL_BPC_BASIC=>SAVE_INFOCUBE
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IMI_OPEX                       TYPE        ZTT_BPC_OPEX
+* | [<---] EXI_MESSAGE                    TYPE        RSDRI_TS_MSG
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD SAVE_INFOCUBE.
+
+    DATA: LV_INFOCUBE TYPE RSD_INFOCUBE,
+          LV_ADSONAME TYPE RSD_INFOCUBE.
+    DATA: LI_MESSAGE TYPE RSDRI_TS_MSG,
+          LI_OPEX    TYPE ZTT_BPC_OPEX,
+          LW_OPEX    TYPE ZST_BPC_OPEX.
+    DATA: LR_DATA  TYPE REF TO DATA,
+          LRS_DATA TYPE REF TO DATA.
+    FIELD-SYMBOLS: <LI_DATA> TYPE STANDARD TABLE,
+                   <LW_DATA> TYPE ANY.
+
+*---------------------- Get Infocube Name ---------------------*
+    IF IMI_OPEX IS NOT INITIAL.
+
+      LV_INFOCUBE = GA_CUBE_OPEX.
+      LV_ADSONAME = GA_DSO_OPEX.
+
+    ENDIF.
+
+*- Create Itab w/ structure of Infocube ---------------------*
+    CALL METHOD ZCL_BPC_BASIC=>_CUBE_CREATE_STRUCTURE
+      EXPORTING
+        IM_INFOCUBE = LV_INFOCUBE
+      IMPORTING
+        EX_DATA     = LR_DATA.
+
+    ASSIGN LR_DATA->* TO <LI_DATA>.
+    CREATE DATA LRS_DATA LIKE LINE OF <LI_DATA>.
+    ASSIGN LRS_DATA->* TO <LW_DATA>.
+
+*- Fill Up Data from DSO ------------------------------------------------*
+    IF IMI_OPEX IS NOT INITIAL.
+      LI_OPEX[] = IMI_OPEX[].
+
+      LOOP AT LI_OPEX INTO LW_OPEX.
+
+        move-CORRESPONDING lw_opex to <lw_data>.
+        append <lw_data> to <li_data>.
+
+      ENDLOOP.
+
+    ENDIF.
+
+
+*---------------------- Write into Infocube ---------------------*
+    CALL FUNCTION 'RSDRI_CUBE_WRITE_PACKAGE'
+      EXPORTING
+        I_INFOCUBE        = lv_INFOCUBE
+        I_CURR_CONVERSION = RS_C_FALSE
+      IMPORTING
+        E_TS_MSG          = LI_MESSAGE
+      CHANGING
+        C_T_DATA          = <LI_DATA>
+      EXCEPTIONS
+        OTHERS            = 1.
+
+    IF LI_MESSAGE[] IS NOT INITIAL.
+      EXI_MESSAGE[] = LI_MESSAGE[].
+    ENDIF.
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Private Method ZCL_BPC_BASIC=>_APPEND_SFC
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IM_CHANM                       TYPE        RSCHANM
+* | [--->] IM_CHAALIAS                    TYPE        RSALIAS
+* | [<-->] CHI_SFC                        TYPE        RSDRI_TH_SFC
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD _APPEND_SFC.
+    DATA: WA_SFC TYPE RSDRI_S_SFC,
+          LI_SFC TYPE TABLE OF RSDRI_S_SFC.
+    DATA: LV_CHANM    TYPE RSCHANM,
+          LV_CHAALIAS TYPE RSALIAS.
+
+*---------------------- move into local var ---------------------*
+    MOVE IM_CHANM TO LV_CHANM.
+    MOVE IM_CHAALIAS TO LV_CHAALIAS.
+    LI_SFC[] = CHI_SFC[].
+
+*---------------------- appending new lines ---------------------*
+    CLEAR WA_SFC.
+    WA_SFC-CHANM = LV_CHANM.
+    WA_SFC-CHAALIAS = LV_CHAALIAS.
+    wa_sfc-ORDERBY = 0.
+    APPEND WA_SFC TO LI_SFC.
+
+    CHI_SFC[] = LI_SFC[].
+
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Private Method ZCL_BPC_BASIC=>_APPEND_SFK
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IM_KYFNM                       TYPE        RSKYFNM
+* | [--->] IM_KYFALIAS                    TYPE        RSALIAS
+* | [--->] IM_AGGR                        TYPE        RSAGGRGEN(optional)
+* | [<-->] CHI_SFK                        TYPE        RSDRI_TH_SFK
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD _APPEND_SFK.
+    DATA: WA_SFK TYPE RSDRI_S_SFK,
+          LI_SFK TYPE TABLE OF RSDRI_S_SFK.
+    DATA: LV_KYFNM    TYPE RSKYFNM,
+          LV_KYFALIAS TYPE RSALIAS,
+          LV_AGGR     TYPE RSAGGRGEN.
+
+*---------------------- initial cond for aggregation ---------------------*
+    IF IM_AGGR IS NOT INITIAL.
+      LV_AGGR = IM_AGGR.
+    ELSE.
+      LV_AGGR = 'SUM'.
+    ENDIF.
+
+*---------------------- move into local var ---------------------*
+    MOVE IM_KYFNM TO LV_KYFNM.
+    MOVE IM_KYFALIAS TO LV_KYFALIAS.
+    LI_SFK[] = CHI_SFK[].
+
+*---------------------- appending new lines ---------------------*
+    CLEAR WA_SFK.
+    WA_SFK-KYFNM = LV_KYFNM.
+    WA_SFK-KYFALIAS = LV_KYFALIAS.
+    WA_SFK-AGGR  = LV_AGGR.
+    APPEND WA_SFK TO LI_SFK.
+
+    CHI_SFK[] = LI_SFK[].
+
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Private Method ZCL_BPC_BASIC=>_CUBE_CREATE_STRUCTURE
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IM_INFOCUBE                    TYPE        RSD_INFOCUBE
+* | [<---] EX_DATA                        TYPE REF TO DATA
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD _CUBE_CREATE_STRUCTURE.
+
+    DATA:
+      LV_UNIQUEID TYPE RSSG_UNI_IDC25,
+      LV_REPID    LIKE SY-REPID,
+      LV_INFOCUBE TYPE RSD_INFOCUBE,
+      LV_TABLNM   TYPE RSD_TABLNM,
+      LV_CODE     TYPE ABAPSOURCE.
+    DATA: LS_CUBE TYPE RSD_S_CUBE.
+    DATA: LI_CODE TYPE STANDARD TABLE OF ABAPSOURCE
+                           WITH DEFAULT KEY.
+    DATA: LR_DATA TYPE REF TO DATA.
+    FIELD-SYMBOLS:<LI_DATA>        TYPE STANDARD TABLE.
+
+*- Get Information about Infocube ------------------------------------------------*
+    MOVE IM_INFOCUBE TO LV_INFOCUBE.
+    CALL FUNCTION 'RSD_CUBE_GET'
+      EXPORTING
+        I_INFOCUBE         = LV_INFOCUBE
+      IMPORTING
+        E_S_CUBE           = LS_CUBE
+      EXCEPTIONS
+        INFOCUBE_NOT_FOUND = 1
+        ILLEGAL_INPUT      = 2
+        OTHERS             = 4.
+    IF SY-SUBRC <> 0.
+      MESSAGE ID 'BRAIN' TYPE 'I' NUMBER 330
+           WITH LV_INFOCUBE.
+    ENDIF.
+
+    LV_TABLNM = ls_cube-VIEWTIOBJNM2.
+
+*- Generate Unique ID (for Report Name)------------------------------------------------*
+    CALL FUNCTION 'RSS_SYSTEM_GET_UNIQUE_ID'
+      IMPORTING
+        E_UNI_IDC25 = LV_UNIQUEID.
+
+    CONCATENATE 'GP' LV_UNIQUEID INTO LV_REPID.
+
+*- The Source Code ------------------------------------------------*
+    CONCATENATE 'REPORT' LV_REPID '.' INTO LV_CODE SEPARATED BY SPACE.
+    APPEND LV_CODE                                             TO LI_CODE.
+    CONCATENATE 'TYPES: L_S_DATA TYPE' LV_TABLNM ','
+                INTO LV_CODE SEPARATED BY SPACE.
+    APPEND LV_CODE                                             TO LI_CODE.
+    APPEND '      L_T_DATA TYPE STANDARD TABLE OF L_S_DATA'   TO LI_CODE.
+    APPEND '                    WITH DEFAULT KEY.'            TO LI_CODE.
+    APPEND 'FORM CREATE_TABLE_TYPES'                          TO LI_CODE.
+    APPEND '    CHANGING E_REF_TO_CHAVLTAB TYPE REF TO DATA.' TO LI_CODE.
+    APPEND '  CREATE DATA E_REF_TO_CHAVLTAB TYPE L_T_DATA.'   TO LI_CODE.
+    APPEND 'ENDFORM.'                                         TO LI_CODE.
+
+*- Create Virtual Report from Source Code ------------------------------------------------*
+    INSERT REPORT LV_REPID FROM LI_CODE.
+
+    PERFORM CREATE_TABLE_TYPES IN PROGRAM (LV_REPID)
+            CHANGING LR_DATA.
+
+     EX_DATA = LR_DATA.
+*    ASSIGN LR_DATA->* TO <LI_DATA>.
+
+*- Clearance ------------------------------------------------*
+    DELETE REPORT LV_REPID.
+    CLEAR LI_CODE.
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Private Method ZCL_BPC_BASIC=>_CUBE_GET_DATA_DSO
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IM_ADSONAME                    TYPE        RSD_INFOCUBE
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD _CUBE_GET_DATA_DSO.
+
+*    DATA: LI_OPEX     TYPE ZTT_BPC_OPEX,
+*          LI_DSO_OPEX TYPE ZTT_BPC_DSO_OPEX,
+*          LI_RANGE    TYPE RSDRI_T_RANGE,
+*          LW_RANGE    TYPE RSDRI_S_RANGE.
+*    DATA: LV_ADSO TYPE RSD_INFOCUBE.
+*
+**- Initialization ------------------------------------------------*
+*    MOVE IM_ADSONAME TO LV_ADSO.
+*
+**- Build Range for Submited Data ------------------------------------------------*
+*    REFRESH: LI_RANGE[].
+*    CLEAR: LW_RANGE.
+*
+**- Get Data from DSO based on Range ------------------------------------------------*
+*    CALL METHOD ZCL_BPC_BASIC=>GET_INFOPROVIDER
+*      EXPORTING
+*        IM_INFOPROVIDER = LV_ADSO
+*        IMI_RANGE       = LI_RANGE
+*      IMPORTING
+*        EXI_DSO_OPEX    = LI_DSO_OPEX.
+*
+*    IF EXI_DSO_OPEX IS REQUESTED.
+*      EXI_DSO_OPEX[] = LI_DSO_OPEX[].
+*    ENDIF.
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Private Method ZCL_BPC_BASIC=>_DSO_ACTIVATE_REQUESTS
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IM_ADSONM                      TYPE        RSOADSONM
+* | [--->] IMR_LOG                        TYPE REF TO CL_RSDSO_LOG
+* | [<-()] RT_REQUEST_TSN                 TYPE        RSDSO_T_TSN
+* | [!CX!] CX_RSDSO_ACTIVATION_FAILED
+* | [!CX!] CX_RSDSO_PREPARE_FAILED
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD _DSO_ACTIVATE_REQUESTS.
+
+    TRY.
+        DATA(LR_ADSO) = CL_RSO_ADSO=>FACTORY( I_ADSONM = IM_ADSONM ).
+        LR_ADSO->GET_INFO( EXPORTING I_OBJVERS = RS_C_OBJVERS-ACTIVE IMPORTING E_S_ADSO = DATA(LS_ADSO) ).
+        IF LS_ADSO-ACTIVATE_DATA = RS_C_FALSE.
+          MESSAGE E009(RSDSO_TEST) INTO DATA(L_MSG).
+          IMR_LOG->ADD_SY_MSG( ).
+          RETURN.
+        ENDIF.
+      CATCH CX_RS_NOT_FOUND.
+    ENDTRY.
+
+    DATA(LR_ACT_API) = CL_RSDSO_ACTIVATE_API=>CREATE( I_ADSONM = IM_ADSONM ).
+    LR_ACT_API->PREPARE( ).
+    RT_REQUEST_TSN = LR_ACT_API->ACTIVATE_ALL( ).
+
+    " incorporate log
+    IMR_LOG->ADD_LOG( LR_ACT_API->GET_LOG( ) ).
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Private Method ZCL_BPC_BASIC=>_DSO_AGGR_GENERATE_METADATA
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IM_ADSONM                      TYPE        RSOADSONM
+* | [--->] IM_AGGR_TYPE                   TYPE        IF_RSDSO_METADATA_GEN=>TN_AGGR_TYPE
+* | [--->] IMR_LOG                        TYPE REF TO CL_RSDSO_LOG
+* | [--->] IM_SEED                        TYPE        INT4
+* | [<-()] RT_AGGR                        TYPE        CL_RSDSO_DSOWRITER_API=>TN_T_AGGR
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD _DSO_AGGR_GENERATE_METADATA.
+
+    " check parameter consistency
+    IF  IM_AGGR_TYPE <> IF_RSDSO_METADATA_GEN=>CN_AGGR_TYPE-NO     AND
+        IM_AGGR_TYPE <> IF_RSDSO_METADATA_GEN=>CN_AGGR_TYPE-RANDOM AND
+        IM_AGGR_TYPE <> IF_RSDSO_METADATA_GEN=>CN_AGGR_TYPE-MOVE   AND
+        IM_AGGR_TYPE <> IF_RSDSO_METADATA_GEN=>CN_AGGR_TYPE-DEF.
+
+      RAISE EXCEPTION TYPE CX_RSDSO_TEST_FAILED
+        EXPORTING
+          TEXTID   = CX_RSDSO_TEST_FAILED=>GET_GEN_MSG_ID( )
+          N_MSGTXT = 'invalid aggregation type'. "#EC NOTEXT.
+    ENDIF.
+
+    " no aggregation behavior wanted
+    IF IM_AGGR_TYPE = IF_RSDSO_METADATA_GEN=>CN_AGGR_TYPE-NO.
+      RETURN.
+    ENDIF.
+
+    " generate aggregation behavior
+    DATA(LR_GEN) =
+    NEW CL_RSDSO_METADATA_GEN( I_ADSONM = IM_ADSONM I_SEED = IM_SEED ).
+    RT_AGGR =
+    LR_GEN->IF_RSDSO_METADATA_GEN~GENERATE_AGGR(
+    I_AGGR_TYPE = IM_AGGR_TYPE
+    ).
+
+    " status message
+    MESSAGE I008(RSDSO_TEST) INTO DATA(L_MSG).
+    IMR_LOG->ADD_SY_MSG( ).
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Private Method ZCL_BPC_BASIC=>_DSO_CREATE_DYNAMIC_MODEL
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IM_RSOADSONM                   TYPE        RSOADSONM
+* | [<---] EXR_TABLESTRUC                 TYPE        DATA
+* | [<---] EXI_COMP_TAB                   TYPE        ABAP_COMPONENT_TAB
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD _DSO_CREATE_DYNAMIC_MODEL.
+
+    DATA: LR_DATA          TYPE REF TO DATA,
+          LR_T_DATA_ACTIVE TYPE REF TO DATA,
+          LR_S_DATA_ACTIVE TYPE REF TO DATA,
+          LR_LOG           TYPE REF TO CL_RSDSO_LOG,
+          LR_DATA_GEN      TYPE REF TO CL_RSDSO_DATA_GEN,
+          LO_SEED          TYPE INT4,
+          LV_ADSONM        TYPE RSOADSONM,
+          LV_MSG           TYPE STRING.
+
+    DATA: LR_STRUCTDESCR TYPE REF TO CL_ABAP_STRUCTDESCR,
+          LR_TABLEDESCR  TYPE REF TO CL_ABAP_TABLEDESCR.
+
+    DATA: LS_COMP             TYPE ABAP_COMPONENTDESCR,
+          LT_COMP_AT          TYPE ABAP_COMPONENT_TAB,
+          LT_COMP_UNIQUE_KEYS TYPE ABAP_COMPONENT_TAB,
+          LS_KEY              TYPE ABAP_KEYDESCR,
+          LT_KEY_UNIQUE       TYPE ABAP_KEYDESCR_TAB,
+          LT_KEY_CHAR         TYPE ABAP_KEYDESCR_TAB,
+          LT_DTA_PRO          TYPE RSD_T_DTA_PRO,
+          L_LEN               TYPE INT4,
+          L_DECIMALS          TYPE INT4.
+
+    MOVE IM_RSOADSONM TO LV_ADSONM.
+
+*---------------------- Create log ---------------------*
+    LR_LOG = NEW CL_RSDSO_LOG( ).
+
+*---------------------- Status message ---------------------*
+    MESSAGE I002(RSDSO_TEST) INTO LV_MSG.
+    LR_LOG->ADD_SY_MSG( ).
+    LR_LOG->DETLEVEL_INC( ).
+
+*---------------------- Get Seed ---------------------*
+    LO_SEED = CL_ABAP_RANDOM=>SEED( ).
+
+*---------------------- Get dynamic types ---------------------*
+    " get adso table names
+    TRY.
+        " get table names
+        DATA(LT_TABLE) = CL_RSO_ADSO=>GET_TABLNM( I_ADSONM = LV_ADSONM I_OBJVERS = RS_C_OBJVERS-ACTIVE I_ONLY_EXISTING = RS_C_FALSE ).
+        " get reference to adso
+        DATA(LR_ADSO)  = CL_RSO_ADSO=>FACTORY(    I_ADSONM = LV_ADSONM ).
+        " get field info (with meta objects to get recordmode)
+        LR_ADSO->IF_RSD_DTA~DTA_GET_INFO(
+            EXPORTING I_DTA_VIEW          = IF_RSD_DTA=>VIEW_DATATARGET
+                      I_WITH_META_IOBJ    = RS_C_TRUE
+            IMPORTING E_T_DTA_PRO         = LT_DTA_PRO ).
+      CATCH CX_RS_NOT_FOUND INTO DATA(LR_NOT_FOUND).
+        RAISE EXCEPTION TYPE CX_RSDSO_TEST_FAILED
+          EXPORTING
+            TEXTID   = CX_RSDSO_TEST_FAILED=>GET_GEN_MSG_ID( )
+            N_MSGTXT = 'datastore not found'.
+    ENDTRY.
+
+    " determine keys of datastore.
+    TRY.
+        IF LR_ADSO->GET_ACTIVATE_DATA( ) = RS_C_TRUE OR LR_ADSO->GET_DIRECT_UPDATE( ) = RS_C_TRUE.
+          LR_ADSO->GET_SEMANTIC_KEY( IMPORTING E_T_SEM_KEY = DATA(LT_KEYFIELD) ).
+        ENDIF.
+        DATA(LT_AT_FIELD) = LR_ADSO->GET_TABLE_FIELDS( I_TABLETYPE = CL_RSDSO_DSOTABLE=>C_TABTYPE_AT I_OBJVERS = RS_C_OBJVERS-ACTIVE ).
+        SORT LT_AT_FIELD BY POSIT.
+      CATCH CX_RS_FAILED CX_RS_NOT_FOUND.
+        RAISE EXCEPTION TYPE CX_RSDSO_TEST_FAILED EXPORTING TEXTID = CX_RSDSO_TEST_FAILED=>GET_GEN_MSG_ID( ) N_MSGTXT = 'could not determine semantic key'. "#EC NOTEXT
+    ENDTRY.
+
+    " process fields
+    LOOP AT LT_AT_FIELD ASSIGNING FIELD-SYMBOL(<LS_AT_FIELD>) WHERE IS_SID = RS_C_FALSE.
+
+      READ TABLE LT_DTA_PRO
+      WITH KEY FIELDNM = <LS_AT_FIELD>-FIELDNM
+      ASSIGNING FIELD-SYMBOL(<LS_DTA_PRO>).
+      APPEND <LS_DTA_PRO> TO LT_DTA_PRO.
+
+      LS_COMP-NAME  = <LS_DTA_PRO>-FIELDNM.
+
+      IF <LS_DTA_PRO>-DTELNM IS NOT INITIAL.
+        LS_COMP-TYPE  ?= CL_ABAP_DATADESCR=>DESCRIBE_BY_NAME( P_NAME = <LS_DTA_PRO>-DTELNM ).
+      ELSE.
+
+        L_LEN       = <LS_DTA_PRO>-INTLEN.
+        L_DECIMALS  = <LS_DTA_PRO>-DECIMALS.
+
+        CASE <LS_DTA_PRO>-INTTP.
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_STRING.        LS_COMP-TYPE = CL_ABAP_ELEMDESCR=>GET_STRING( ).
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_XSTRING.       LS_COMP-TYPE = CL_ABAP_ELEMDESCR=>GET_XSTRING( ).
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_INT.           LS_COMP-TYPE = CL_ABAP_ELEMDESCR=>GET_I( ).
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_INT8.          LS_COMP-TYPE = CL_ABAP_ELEMDESCR=>GET_INT8( ).
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_FLOAT.         LS_COMP-TYPE = CL_ABAP_ELEMDESCR=>GET_F( ).
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_DATE.          LS_COMP-TYPE = CL_ABAP_ELEMDESCR=>GET_D( ).
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_TIME.          LS_COMP-TYPE = CL_ABAP_ELEMDESCR=>GET_T( ).
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_CHAR.          LS_COMP-TYPE = CL_ABAP_ELEMDESCR=>GET_C( L_LEN ).
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_NUM.           LS_COMP-TYPE = CL_ABAP_ELEMDESCR=>GET_N( L_LEN ).
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_HEX.           LS_COMP-TYPE = CL_ABAP_ELEMDESCR=>GET_X( L_LEN ).
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_INT1.          LS_COMP-TYPE ?= CL_ABAP_ELEMDESCR=>DESCRIBE_BY_NAME( 'INT1' ).
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_INT2.          LS_COMP-TYPE ?= CL_ABAP_ELEMDESCR=>DESCRIBE_BY_NAME( 'INT2' ).
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_DECFLOAT16.    LS_COMP-TYPE ?= CL_ABAP_ELEMDESCR=>GET_DECFLOAT16( ).
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_DECFLOAT34.    LS_COMP-TYPE ?= CL_ABAP_ELEMDESCR=>GET_DECFLOAT34( ).
+          WHEN CL_ABAP_TYPEDESCR=>TYPEKIND_PACKED.        LS_COMP-TYPE ?= CL_ABAP_ELEMDESCR=>GET_P( P_LENGTH = L_LEN P_DECIMALS = L_DECIMALS ).
+          WHEN OTHERS.                                    MESSAGE X001(RSDSO_TEST).
+        ENDCASE.
+
+      ENDIF.
+
+      " append to structure of active data table
+      APPEND LS_COMP TO LT_COMP_AT.
+
+    ENDLOOP.
+
+    " at structure without any key
+    LR_STRUCTDESCR = CL_ABAP_STRUCTDESCR=>CREATE( EXPORTING P_COMPONENTS = LT_COMP_AT ).
+    LR_TABLEDESCR  = CL_ABAP_TABLEDESCR=>CREATE(
+        EXPORTING   P_LINE_TYPE       = LR_STRUCTDESCR
+                    P_UNIQUE          = RS_C_FALSE
+                    P_TABLE_KIND      = CL_ABAP_TABLEDESCR=>TABLEKIND_STD ).
+
+    CREATE DATA LR_S_DATA_ACTIVE TYPE HANDLE LR_STRUCTDESCR.
+    CREATE DATA LR_T_DATA_ACTIVE TYPE HANDLE LR_TABLEDESCR.
+
+    IF LR_T_DATA_ACTIVE IS BOUND.
+      EXR_TABLESTRUC = LR_T_DATA_ACTIVE.
+    ENDIF.
+
+    IF LT_COMP_AT[] IS NOT INITIAL.
+      EXI_COMP_TAB[] = LT_COMP_AT[].
+    ENDIF.
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Private Method ZCL_BPC_BASIC=>_DSO_FILL_UP_DATA
+* +-------------------------------------------------------------------------------------------------+
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD _DSO_FILL_UP_DATA.
+
+*    DATA: LW_HEADER   TYPE ZTGRF_HEADER,
+*          LW_DETAIL   TYPE ZCL_BPC_BASIC=>TS_ACTIVITY_DATA,
+*          LI_DETAIL   TYPE ZCL_BPC_BASIC=>TT_ACTIVITY_DATA,
+*          LW_DSO_OPEX TYPE ZST_BPC_DSO_OPEX,
+*          LI_DSO_OPEX TYPE ZTT_BPC_DSO_OPEX.
+*
+*    IF IMW_HEADER_DATA IS NOT INITIAL
+*      AND IMI_DETAIL_ACTIVITY[] IS NOT INITIAL.
+*      MOVE   IMW_HEADER_DATA TO LW_HEADER.
+*      LI_DETAIL[] = IMI_DETAIL_ACTIVITY[].
+*    ENDIF.
+*
+*
+*    IF EXI_OPEX IS REQUESTED.
+*      CLEAR LW_DSO_OPEX.
+**      LW_DSO_OPEX-0FISCPER = ???
+**- header ------------------------------------------------*
+*      LW_DSO_OPEX-0FISCVARNT = 'K4'.
+*      LW_DSO_OPEX-ZRAB = LW_HEADER-RABNUMBER.
+*      LW_DSO_OPEX-ZCATEGORY = LW_HEADER-BGT_CATEGORY.
+*      LW_DSO_OPEX-ZCYCLE = LW_HEADER-BGT_CYCLE.
+*      LW_DSO_OPEX-ZENTITY = LW_HEADER-ENTITY.
+*      LW_DSO_OPEX-ZCOSTCTR = LW_HEADER-COST_CENTER.
+*      LW_DSO_OPEX-ZACCOUNT = LW_HEADER-GLACC_BASE.
+*
+*      LW_DSO_OPEX-ZSTATUS = 'SAVE'.
+*
+**      LW_DSO_OPEX-ZRPTCURR = 'IDR'.???
+**      LW_DSO_OPEX-ZBUSAREA = 'JM00'.???
+**- detail ------------------------------------------------*
+*      LOOP AT LI_DETAIL INTO LW_DETAIL.
+*        LW_DSO_OPEX-ZACTIVITY = LW_DETAIL-ACTIVITY.
+*        LW_DSO_OPEX-0FISCPER = LW_DETAIL-PERIOD.
+*        LW_DSO_OPEX-SGNDT_QTY = LW_DETAIL-QUANTITY.
+*        LW_DSO_OPEX-SGNDT_1 = LW_DETAIL-PRICE.
+*        LW_DSO_OPEX-SGNDT_TOTAL = LW_DETAIL-QUANTITY * LW_DETAIL-PRICE.
+*        APPEND LW_DSO_OPEX TO LI_DSO_OPEX.
+*      ENDLOOP.
+*
+*      IF LI_DSO_OPEX[] IS NOT INITIAL.
+*        EXI_OPEX[] = LI_DSO_OPEX[].
+*      ENDIF.
+*
+*    ENDIF.
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Private Method ZCL_BPC_BASIC=>_DSO_UPDATE_INBOUND_DATA
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IM_ADSONM                      TYPE        RSOADSONM
+* | [--->] IMR_DATA                       TYPE REF TO DATA
+* | [--->] IMR_LOG                        TYPE REF TO CL_RSDSO_LOG
+* | [--->] IMI_AGGR                       TYPE        CL_RSDSO_DSOWRITER_API=>TN_T_AGGR
+* | [<-()] R_REQUEST_TSN                  TYPE        RSPM_REQUEST_TSN
+* | [!CX!] CX_RSDSO_PREPARE_FAILED
+* | [!CX!] CX_RSDSO_UPDATE_FAILED
+* | [!CX!] CX_RSDSO_RUNTIME_ERROR
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD _DSO_UPDATE_INBOUND_DATA.
+
+    DATA: L_RECORDS TYPE INT4,
+          LR_EXC    TYPE REF TO CX_RSDSO_ROOT.
+
+    " get writer api
+    TRY.
+        DATA(LR_ADSO)   = CL_RSO_ADSO=>FACTORY( IM_ADSONM ).
+        DATA(L_TABTYPE) = LR_ADSO->GET_OBJECT_FOR_LOADING( RS_C_OBJVERS-ACTIVE )-TABTYPE.
+      CATCH CX_RS_NOT_FOUND CX_RS_FAILED.
+        IMR_LOG->ADD_SY_MSG( ).
+        RAISE EXCEPTION TYPE CX_RSDSO_UPDATE_FAILED EXPORTING LOG_REF = IMR_LOG.
+    ENDTRY.
+
+    DATA(LR_WRITER_API)  = CL_RSDSO_DSOWRITER_API=>CREATE( I_ADSONM = IM_ADSONM I_TABLE_TYPE = L_TABTYPE ).
+
+    TRY.
+
+        " prepare writer (e.g. open request)
+        LR_WRITER_API->PREPARE( IT_AGGREGATION = IMI_AGGR ).
+
+        " write records
+        L_RECORDS = LR_WRITER_API->WRITE( IRT_DATA = IMR_DATA ).
+
+        " get tsn of generated request
+        R_REQUEST_TSN = LR_WRITER_API->GET_REQUEST( ).
+
+        " close API (e.g. close request)
+        LR_WRITER_API->CLOSE( I_NUMREC = L_RECORDS ).
+
+        " incorporate log
+        IMR_LOG->ADD_LOG( LR_WRITER_API->GET_LOG( ) ).
+
+      CLEANUP.
+        TRY.
+            LR_WRITER_API->CLOSE( I_SUCCESS = RS_C_FALSE ).
+          CATCH CX_RSDSO_PREPARE_FAILED.
+            " nothing to do
+        ENDTRY.
+    ENDTRY.
+
+  ENDMETHOD.
+ENDCLASS.
