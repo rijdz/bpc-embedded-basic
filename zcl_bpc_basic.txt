@@ -1,58 +1,106 @@
-"BPC Basic Class on P4
+"BPC Basic Class on JM
 class ZCL_BPC_BASIC definition
   public
   final
-  create public .
+  create public
+
+  global friends CL_RSDMDM_OBJ_CHA .
 
 public section.
 
-  types TT_RANGE type UJ0_T_RANGE .
-  types TS_RANGE type UJ0_S_RANGE .
+  types TS_IO_DATA type RSNDI_S_CHAVL_MAX .
+  types:
+    TT_IO_DATA TYPE TABLE OF ts_io_data .
+  types TS_ACTIVITY_DATA type ZTGRF_ACTIVITY .
+  types TS_IOBJNM type RSD_S_IOBJNM .
+  types:
+    TT_ACTIVITY_DATA TYPE TABLE OF TS_ACTIVITY_DATA .
+  types:
+    TT_IOBJNM TYPE TABLE OF TS_IOBJNM .
+  types TS_MESSAGE type RSNDI_S_MESSAGE .
+  types:
+    TT_MESSAGE TYPE TABLE OF TS_MESSAGE .
 
-*  types TS_ACTIVITY_DATA type ZTGRF_ACTIVITY .
-*  types:
-*    TT_ACTIVITY_DATA TYPE TABLE OF TS_ACTIVITY_DATA .
   constants GA_CUBE_OPEX type RSD_INFOCUBE value 'ZOPEX' ##NO_TEXT.
+  constants GA_CUBE_CAPEX type RSD_INFOCUBE value 'ZCAPEX' ##NO_TEXT.
+  constants GA_CUBE_REV type RSD_INFOCUBE value 'ZREV' ##NO_TEXT.
+  constants GA_CUBE_FIN type RSD_INFOCUBE value 'ZFIN' ##NO_TEXT.
   constants GA_DSO_OPEX type RSD_INFOCUBE value 'ZFI_OPEX' ##NO_TEXT.
   constants GA_DSO_CPX type RSD_INFOCUBE value 'ZFI_CPX' ##NO_TEXT.
   constants GA_DSO_REV type RSD_INFOCUBE value 'ZFI_REV' ##NO_TEXT.
+  constants GA_ERROR type MSGTY value 'E' ##NO_TEXT.
+  constants GA_SUCCESS type MSGTY value 'S' ##NO_TEXT.
+  constants GA_IO_CAPEX_OBJ type RSDIOBJNM value 'ZCPXOBJ' ##NO_TEXT.
+  constants GA_IO_CAPEX_ACC type RSDIOBJNM value 'ZCPXACC' ##NO_TEXT.
+  constants GA_IO_BGT_STEP type RSDIOBJNM value 'ZBGTSTEP' ##NO_TEXT.
+  constants GA_TEXT_MD type RSIOBJNM value '0TXTMD' ##NO_TEXT.
+  constants GA_TEXT_LG type RSIOBJNM value '0TXTLG' ##NO_TEXT.
 
   class-methods GET_INFOPROVIDER
     importing
       !IMI_RANGE type RSDRI_T_RANGE optional
       !IM_INFOPROVIDER type RSD_INFOCUBE optional
     exporting
-      !EXI_OPEX type ZTT_BPC_OPEX .
-*      !EXI_DSO_OPEX type ZTT_BPC_DSO_OPEX .
+      !EXI_OPEX type ZTT_BPC_OPEX
+      !EXI_DSO_OPEX type ZTT_BPC_DSO_OPEX
+      !EXI_CAPEX type ZTT_BPC_CAPEX
+      !EXI_DSO_CAPEX type ZTT_BPC_DSO_CAPEX
+      !EXI_REVENUE type ZTT_BPC_REVENUE
+      !EXI_DSO_REVENUE type ZTT_BPC_DSO_REVENUE
+      !EXI_FINANCIAL type ZTT_BPC_FINANCIAL .
   class-methods GET_HIERARCHY
     importing
       !IM_IOBJNM type RSIOBJNM
     exporting
       !EXI_HIERSTRUC type WRMA_TT_RSHIERSTRUC .
   class-methods GET_INFOOBJECT
-    importing
-      !IM_CHAVL type RSD_CHAVL optional
     exporting
-      !EXI_ZPOSTRULE type ZTT_BPC_IO_POSTRULE
-      !EXI_ZTACCOUNT type ZTT_BPC_IO_ZTACCOUNT
-      !EXI_ZBA type ZTT_BPC_IO_ZBA
-      !EXI_ZTTYPE type ZTT_BPC_IO_ZTTYPE
-      !EXI_ZPR type ZTT_BPC_IO_POSTRULE .
-*      !IMW_HEADER_DATA type ZTGRF_HEADER
-*      !IMI_DETAIL_ACTIVITY type ZCL_BPC_BASIC=>TT_ACTIVITY_DATA
-*    exporting
-*      !EXI_CONSOLIDATION type ZTT_BPC_CONSOLIDATION .
+      !EXI_POSRULE type ZTT_BPC_IO_POSRULE
+      !EXI_CPXOBJ type ZTT_BPC_IO_CPXOBJ
+      !EXI_ASTCLASS type ZTT_BPC_IO_ASTCLASS
+      !EXI_ACCOUNT type ZTT_BPC_IO_ACCOUNT
+      !EXI_ACTIVITY type ZTT_BPC_IO_ACTIVITY
+      !EXI_COSTCTR type ZTT_BPC_IO_COSTCTR
+      !EXI_PRFITCTR type ZTT_BPC_IO_PRFITCTR
+      !EXI_BUSAREA type ZTT_BPC_IO_BUSAREA
+      !EXI_KELCPX type ZTT_BPC_IO_KELCPX
+      !EXI_SUBKLCPX type ZTT_BPC_IO_SUBKLCPX
+      !EXI_CPXACC type ZTT_BPC_IO_CPXACC .
   class-methods SAVE_ADSO
     importing
       !IM_RSOADSONM type RSOADSONM
+      !IMW_HEADER_DATA type ZTGRF_HEADER
+      !IMI_DETAIL_ACTIVITY type ZCL_BPC_BASIC=>TT_ACTIVITY_DATA
     exporting
       !EXR_TABLESTRUC type DATA
       !EX_GEN_SUCCESFUL type RS_BOOL .
   class-methods SAVE_INFOCUBE
     importing
-      !IMI_OPEX type ZTT_BPC_OPEX
+      !IMI_OPEX type ZTT_BPC_OPEX optional
+      !IMI_CAPEX type ZTT_BPC_CAPEX optional
+      !IMI_REVENUE type ZTT_BPC_REVENUE optional
     exporting
       !EXI_MESSAGE type RSDRI_TS_MSG .
+  class-methods SAVE_INFOOBJECT
+    importing
+      !IM_IOBJNM type RSIOBJNM
+      !IMI_IO_DATA type STANDARD TABLE
+      !IMI_IO_TEXT type ZCL_BPC_BASIC=>TT_IO_DATA
+    exporting
+      !EXI_MESSAGE type ZCL_BPC_BASIC=>TT_MESSAGE
+      !EX_SUCCESS type BOOLEAN .
+  class-methods ACTIVATE_INFOPROVIDER
+    importing
+      value(IM_CUBE) type RSD_INFOCUBE
+      value(EXI_MSG) type RS_T_MSG optional .
+  class-methods DELETE_INFOOBJECT
+    importing
+      !IMI_DEL_DATA type STRING_TABLE
+      !IM_IOBJNM type RSIOBJNM
+    exporting
+      !EX_DEL_SUCCESS type RS_BOOL .
+*    exporting
+*      !EXI_CONSOLIDATION type ZTT_BPC_CONSOLIDATION .
 protected section.
 private section.
 
@@ -104,12 +152,14 @@ private section.
     raising
       CX_RSDSO_ACTIVATION_FAILED
       CX_RSDSO_PREPARE_FAILED .
-  class-methods _DSO_FILL_UP_DATA.
-*    importing
-*      !IMW_HEADER_DATA type ZTGRF_HEADER
-*      !IMI_DETAIL_ACTIVITY type ZCL_BPC_BASIC=>TT_ACTIVITY_DATA
-*    exporting
-*      !EXI_OPEX type ZTT_BPC_DSO_OPEX .
+  class-methods _DSO_FILL_UP_DATA
+    importing
+      !IMW_HEADER_DATA type ZTGRF_HEADER
+      !IMI_DETAIL_ACTIVITY type ZCL_BPC_BASIC=>TT_ACTIVITY_DATA
+    exporting
+      !EXI_OPEX type ZTT_BPC_DSO_OPEX
+      !EXI_CAPEX type ZTT_BPC_DSO_CAPEX
+      !EXI_REVENUE type ZTT_BPC_DSO_REVENUE .
   class-methods _CUBE_CREATE_STRUCTURE
     importing
       !IM_INFOCUBE type RSD_INFOCUBE
@@ -117,14 +167,156 @@ private section.
       !EX_DATA type ref to DATA .
   class-methods _CUBE_GET_DATA_DSO
     importing
-      !IM_ADSONAME type RSD_INFOCUBE.
-*    exporting
-*      !EXI_DSO_OPEX type ZTT_BPC_DSO_OPEX .
+      !IM_ADSONAME type RSD_INFOCUBE
+    exporting
+      !EXI_DSO_OPEX type ZTT_BPC_DSO_OPEX .
+  class-methods _IO_FILL_UP_DATA
+    importing
+      !IM_IOBJNM type RSDIOBJNM
+      !IMI_IO_DATA type STANDARD TABLE
+    exporting
+      !EXI_ATTRIBUTES type ZCL_BPC_BASIC=>TT_IOBJNM
+      !EXI_IO_DATA type ZCL_BPC_BASIC=>TT_IO_DATA .
 ENDCLASS.
 
 
 
 CLASS ZCL_BPC_BASIC IMPLEMENTATION.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Public Method ZCL_BPC_BASIC=>ACTIVATE_INFOPROVIDER
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IM_CUBE                        TYPE        RSD_INFOCUBE
+* | [--->] EXI_MSG                        TYPE        RS_T_MSG(optional)
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD activate_infoprovider.
+    DATA : lv_infocube TYPE rsd_infocube,
+           lt_msg      TYPE rs_t_msg,
+           lv_subrc    LIKE sy-subrc.
+
+    CLEAR : lt_msg[],
+            lv_subrc.
+
+    CASE im_cube.
+      WHEN 'CAPEX'.
+        lv_infocube = ga_cube_capex.
+      WHEN 'OPEX'.
+        lv_infocube = ga_cube_opex.
+      WHEN 'REV'.
+        lv_infocube = ga_cube_rev.
+    ENDCASE.
+
+    CALL FUNCTION 'RSDG_CUBE_ACTIVATE'
+      EXPORTING
+        i_infocube = lv_infocube
+      IMPORTING
+        e_t_msg    = lt_msg
+        e_subrc    = lv_subrc.
+
+    IF lv_subrc NE 0.
+      exi_msg[] = lt_msg[].
+    ENDIF.
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Public Method ZCL_BPC_BASIC=>DELETE_INFOOBJECT
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IMI_DEL_DATA                   TYPE        STRING_TABLE
+* | [--->] IM_IOBJNM                      TYPE        RSIOBJNM
+* | [<---] EX_DEL_SUCCESS                 TYPE        RS_BOOL
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD DELETE_INFOOBJECT.
+
+    DATA: LI_DEL_DATA    TYPE STRING_TABLE,
+          LW_DEL_DATA    LIKE LINE OF LI_DEL_DATA,
+          LV_DEL_SUCCESS TYPE RS_BOOL,
+          LV_IOBJNM      TYPE RSIOBJNM,
+          LV_CHANM       TYPE RSD_CHANM,
+          LI_MESSAGES    TYPE RSNDI_T_MESSAGE,
+          LW_MESSAGES    TYPE RSNDI_S_MESSAGE.
+
+    DATA: LO_INFOOBJECT TYPE REF TO CL_RSDMDM_OBJ_CHA.
+
+    IF IMI_DEL_DATA[] IS NOT INITIAL.
+      LI_DEL_DATA[] = IMI_DEL_DATA[].
+    ELSE.
+      EXIT.
+    ENDIF.
+
+    MOVE IM_IOBJNM TO LV_IOBJNM.
+
+*- Instantiate Object -------------------------*
+    CALL METHOD ZCL_BPC_OBJ_CHA=>IO_GET_OBJECT
+      EXPORTING
+        IM_IOBJNM   = LV_IOBJNM
+      IMPORTING
+        EXO_OBJ_CHA = LO_INFOOBJECT.
+
+*- Save & Process Delete Data -------------------------*
+    CALL METHOD ZCL_BPC_OBJ_CHA=>IO_SET_DELETE
+      EXPORTING
+        IMI_DEL_DATA = LI_DEL_DATA
+      CHANGING
+        CHO_OBJ_CHA  = LO_INFOOBJECT.
+
+    LO_INFOOBJECT->DELETE_CHAVL_EXECUTE(
+    IMPORTING
+      E_SUCCESS    = LV_DEL_SUCCESS
+      E_T_MESSAGES = LI_MESSAGES
+  ).
+
+*- Activate Master Data -------------------------*
+    IF LI_MESSAGES[] IS INITIAL.
+
+      MOVE LV_IOBJNM TO LV_CHANM.
+
+      CALL FUNCTION 'RSDMD_MD_ACTIVATE'
+        EXPORTING
+          I_CHABASNM = LV_CHANM.
+
+*-- 1. Message Handling for Activation -------------------------*
+      LW_MESSAGES-MSGTY = SY-MSGTY.
+      LW_MESSAGES-MSGID = SY-MSGID.
+      LW_MESSAGES-MSGNO = SY-MSGNO.
+      LW_MESSAGES-MSGV1 = SY-MSGV1.
+      LW_MESSAGES-MSGV2 = SY-MSGV2.
+      LW_MESSAGES-MSGV3 = SY-MSGV3.
+      LW_MESSAGES-MSGV4 = SY-MSGV4.
+      APPEND LW_MESSAGES TO LI_MESSAGES.
+      DELETE ADJACENT DUPLICATES FROM LI_MESSAGES.
+
+*-- 2. Message Handling for Saved Status of InfoObject -------------------------*
+      IF LW_MESSAGES-MSGTY = GA_ERROR.
+        LV_DEL_SUCCESS = RS_C_FALSE.
+      ELSEIF LW_MESSAGES-MSGID = 'RSDMD' AND LW_MESSAGES-MSGNO = 003.
+        FREE LI_MESSAGES..
+        LW_MESSAGES-MSGTY = RS_C_SUCCESS.
+        LV_DEL_SUCCESS = RS_C_TRUE.
+        APPEND LW_MESSAGES TO LI_MESSAGES.
+      ELSE.
+        MESSAGE S182(RSDMD) WITH LV_IOBJNM.
+        LW_MESSAGES-MSGTY = SY-MSGTY.
+        LW_MESSAGES-MSGID = SY-MSGID.
+        LW_MESSAGES-MSGNO = SY-MSGNO.
+        LW_MESSAGES-MSGV1 = SY-MSGV1.
+        LW_MESSAGES-MSGV2 = SY-MSGV2.
+        LW_MESSAGES-MSGV3 = SY-MSGV3.
+        LW_MESSAGES-MSGV4 = SY-MSGV4.
+        APPEND LW_MESSAGES TO LI_MESSAGES.
+
+      ENDIF.
+    ENDIF.
+*- Export Values -------------------------*
+    MOVE LV_DEL_SUCCESS TO EX_DEL_SUCCESS.
+    IF LI_MESSAGES[] IS NOT INITIAL.
+*      EXI_MESSAGE[] = LI_MESSAGES[].
+    ENDIF.
+
+    EX_DEL_SUCCESS = LV_DEL_SUCCESS.
+
+  ENDMETHOD.
 
 
 * <SIGNATURE>---------------------------------------------------------------------------------------+
@@ -186,80 +378,54 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
 * <SIGNATURE>---------------------------------------------------------------------------------------+
 * | Static Public Method ZCL_BPC_BASIC=>GET_INFOOBJECT
 * +-------------------------------------------------------------------------------------------------+
-* | [--->] IM_CHAVL                       TYPE        RSD_CHAVL(optional)
-* | [<---] EXI_ZPOSTRULE                  TYPE        ZTT_BPC_IO_POSTRULE
-* | [<---] EXI_ZTACCOUNT                  TYPE        ZTT_BPC_IO_ZTACCOUNT
-* | [<---] EXI_ZBA                        TYPE        ZTT_BPC_IO_ZBA
-* | [<---] EXI_ZTTYPE                     TYPE        ZTT_BPC_IO_ZTTYPE
-* | [<---] EXI_ZPR                        TYPE        ZTT_BPC_IO_POSTRULE
+* | [<---] EXI_POSRULE                    TYPE        ZTT_BPC_IO_POSRULE
+* | [<---] EXI_CPXOBJ                     TYPE        ZTT_BPC_IO_CPXOBJ
+* | [<---] EXI_ASTCLASS                   TYPE        ZTT_BPC_IO_ASTCLASS
+* | [<---] EXI_ACCOUNT                    TYPE        ZTT_BPC_IO_ACCOUNT
+* | [<---] EXI_ACTIVITY                   TYPE        ZTT_BPC_IO_ACTIVITY
+* | [<---] EXI_COSTCTR                    TYPE        ZTT_BPC_IO_COSTCTR
+* | [<---] EXI_PRFITCTR                   TYPE        ZTT_BPC_IO_PRFITCTR
+* | [<---] EXI_BUSAREA                    TYPE        ZTT_BPC_IO_BUSAREA
+* | [<---] EXI_KELCPX                     TYPE        ZTT_BPC_IO_KELCPX
+* | [<---] EXI_SUBKLCPX                   TYPE        ZTT_BPC_IO_SUBKLCPX
+* | [<---] EXI_CPXACC                     TYPE        ZTT_BPC_IO_CPXACC
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD GET_INFOOBJECT.
 
-    DATA: LI_ZTACCOUNT TYPE ZTT_BPC_IO_ZTACCOUNT,
-          LI_ZPOSTRULE TYPE ZTT_BPC_IO_ZTACCOUNT.
-    DATA: LO_DATA  TYPE REF TO DATA,
-          LOW_DATA TYPE REF TO DATA.
+    DATA: LO_DATA TYPE REF TO DATA.
     DATA: LV_IOBJNM TYPE RSDIOBJ-IOBJNM,
-          LV_CHKTTY TYPE TTYPENAME,
-          LV_CHKTAB TYPE RSDCHKVIEW,
-          LV_CHAVL  TYPE RSD_CHAVL.
-    DATA: LW_VIOBJ TYPE RSD_S_VIOBJ.
-    FIELD-SYMBOLS: <LI_MASTER_DATA> TYPE ANY TABLE,
-                   <LW_MASTER_DATA> TYPE ANY.
-*
-**&---------------------------------------------------------------------*
-**& INITIALIZATION
-**&---------------------------------------------------------------------*
+          LV_CHKTTY TYPE TTYPENAME.
+    FIELD-SYMBOLS: <LI_MASTER_DATA> TYPE ANY TABLE.
 
-    IF IM_CHAVL IS NOT INITIAL.
-      MOVE IM_CHAVL TO LV_CHAVL.
-    ENDIF.
-
-**---------------------- Determine Info Object ---------------------*
-    IF EXI_ZPOSTRULE IS REQUESTED.
-      LV_IOBJNM = 'ZPOSTRULE'.
-    ELSEIF exi_zpr IS REQUESTED.
-      LV_IOBJNM = 'ZPR'.
-    ELSEIF EXI_ZTACCOUNT IS REQUESTED.
-      LV_IOBJNM = 'ZTACCOUNT'.
-    ELSEIF EXI_ZBA IS REQUESTED.
-      LV_IOBJNM = 'ZBA'.
-    ELSEIF EXI_ZTTYPE IS REQUESTED.
-      LV_IOBJNM = 'ZTTYPE'.
-    ENDIF.
-
-    CALL FUNCTION 'RSD_IOBJ_GET'
-      EXPORTING
-        I_IOBJNM       = LV_IOBJNM
-      IMPORTING
-        E_S_VIOBJ      = LW_VIOBJ
-      EXCEPTIONS
-        IOBJ_NOT_FOUND = 1
-        ILLEGAL_INPUT  = 2
-        OTHERS         = 3.
-    IF SY-SUBRC <> 0.
-*      MESSAGE ID SY-MSGID TYPE 'E' NUMBER SY-MSGNO
-*          WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4
-*          RAISING READ_ERROR.
-    ENDIF.
-
-*- Get structure of Info Object -------------------------*
-    CALL FUNCTION 'RSD_CHKTAB_GET_FOR_CHA_BAS'
-      EXPORTING
-        I_CHABASNM = LW_VIOBJ-CHABASNM
-      IMPORTING
-        E_CHKTAB   = LV_CHKTAB
-      EXCEPTIONS
-        NAME_ERROR = 1
-        OTHERS     = 2.
-    IF SY-SUBRC <> 0.
-*      MESSAGE ID SY-MSGID TYPE 'E' NUMBER SY-MSGNO
-*            WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4
-*            RAISING READ_ERROR.
-
+*&---------------------------------------------------------------------*
+*& INITIALIZATION
+*&---------------------------------------------------------------------*
+*---------------------- Determine Info Object ---------------------*
+    IF EXI_POSRULE IS REQUESTED.
+      LV_IOBJNM = 'ZPOSRULE'.
+    ELSEIF EXI_CPXOBJ IS REQUESTED.
+      LV_IOBJNM = 'ZCPXOBJ'.
+    ELSEIF EXI_ASTCLASS IS REQUESTED.
+      LV_IOBJNM = 'ZASTCLASS'.
+    ELSEIF EXI_ACCOUNT IS REQUESTED.
+      LV_IOBJNM = 'ZACCOUNT'.
+    ELSEIF EXI_ACTIVITY IS REQUESTED.
+      LV_IOBJNM = 'ZACTIVITY'.
+    ELSEIF EXI_COSTCTR IS REQUESTED.
+      LV_IOBJNM = 'ZCOSTCTR'.
+    ELSEIF EXI_PRFITCTR IS REQUESTED.
+      LV_IOBJNM = 'ZPRFITCTR'.
+    ELSEIF EXI_BUSAREA IS REQUESTED.
+      LV_IOBJNM = 'ZBUSAREA'.
+    ELSEIF EXI_KELCPX IS REQUESTED.
+      LV_IOBJNM = 'ZKELCPX'.
+    ELSEIF EXI_SUBKLCPX IS REQUESTED.
+      LV_IOBJNM = 'ZSUBKLCPX'.
+    ELSEIF EXI_CPXACC IS REQUESTED.
+      LV_IOBJNM = 'ZCPXACC'.
     ENDIF.
 *
-*- Get Tabletypes of Info Object ---------------------*
+**---------------------- Get Structure of Info Object ---------------------*
     CALL FUNCTION 'RSD_TABTYPES_GET_FOR_CHA_BAS'
       EXPORTING
         I_CHABASNM = LV_IOBJNM
@@ -275,67 +441,55 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
     ENDIF.
 
     CREATE DATA LO_DATA TYPE (LV_CHKTTY).
+
     ASSIGN LO_DATA->* TO <LI_MASTER_DATA>.
-    CREATE DATA LOW_DATA TYPE (LV_CHKTAB).
-    ASSIGN LOW_DATA->* TO <LW_MASTER_DATA>.
-*
-*
-**&---------------------------------------------------------------------*
-**& GET DATA
-**&---------------------------------------------------------------------*
 
-    IF LV_CHAVL IS NOT INITIAL.
 
-      CALL FUNCTION 'RSAU_READ_MASTER_DATA'
-        EXPORTING
-          I_IOBJNM                = LV_IOBJNM
-          I_CHAVL                 = LV_CHAVL
-        IMPORTING
-          E_STRUCTURE             = <LW_MASTER_DATA>
-        EXCEPTIONS
-          READ_ERROR              = 1
-          NO_SUCH_ATTRIBUTE       = 2
-          WRONG_IMPORT_PARAMETERS = 3
-          CHAVL_NOT_FOUND         = 4
-          OTHERS                  = 5.
-      IF SY-SUBRC <> 0.
+*&---------------------------------------------------------------------*
+*& GET DATA
+*&---------------------------------------------------------------------*
+
+    CALL FUNCTION 'RSAU_READ_MASTER_DATA'
+      EXPORTING
+        I_IOBJNM                = LV_IOBJNM
+        I_FLG_WHOLE_TABLE       = 'X'
+      IMPORTING
+        E_TABLE                 = <LI_MASTER_DATA>
+      EXCEPTIONS
+        READ_ERROR              = 1
+        NO_SUCH_ATTRIBUTE       = 2
+        WRONG_IMPORT_PARAMETERS = 3
+        CHAVL_NOT_FOUND         = 4
+        OTHERS                  = 5.
+    IF SY-SUBRC <> 0.
 * Implement suitable error handling here
-      ENDIF.
-
-    ELSE.
-
-      CALL FUNCTION 'RSAU_READ_MASTER_DATA'
-        EXPORTING
-          I_IOBJNM                = LV_IOBJNM
-          I_FLG_WHOLE_TABLE       = 'X'
-        IMPORTING
-          E_TABLE                 = <LI_MASTER_DATA>
-        EXCEPTIONS
-          READ_ERROR              = 1
-          NO_SUCH_ATTRIBUTE       = 2
-          WRONG_IMPORT_PARAMETERS = 3
-          CHAVL_NOT_FOUND         = 4
-          OTHERS                  = 5.
-      IF SY-SUBRC <> 0.
-* Implement suitable error handling here
-      ENDIF.
-
     ENDIF.
 
-*
-**&---------------------------------------------------------------------*
-**& RESULT
-**&---------------------------------------------------------------------*
-    IF EXI_ZPOSTRULE IS REQUESTED.
-      EXI_ZPOSTRULE[] = <LI_MASTER_DATA>[].
-    ELSEIF exi_zpr IS REQUESTED.
-      EXI_ZPR[] = <LI_MASTER_DATA>[].
-    ELSEIF EXI_ZTACCOUNT IS REQUESTED.
-      EXI_ZTACCOUNT[] = <LI_MASTER_DATA>[].
-    ELSEIF EXI_ZBA IS REQUESTED .
-      EXI_ZBA[] = <LI_MASTER_DATA>[].
-    ELSEIF EXI_ZTTYPE IS REQUESTED.
-      EXI_ZTTYPE[] = <LI_MASTER_DATA>[].
+*&---------------------------------------------------------------------*
+*& RESULT
+*&---------------------------------------------------------------------*
+    IF EXI_POSRULE IS REQUESTED.
+      EXI_POSRULE[] = <LI_MASTER_DATA>[].
+    ELSEIF EXI_CPXOBJ IS REQUESTED.
+      EXI_CPXOBJ[] = <LI_MASTER_DATA>[].
+    ELSEIF EXI_ASTCLASS IS REQUESTED.
+      EXI_ASTCLASS[] = <LI_MASTER_DATA>[].
+    ELSEIF EXI_ACCOUNT IS REQUESTED.
+      EXI_ACCOUNT[] = <LI_MASTER_DATA>[].
+    ELSEIF EXI_ACTIVITY IS REQUESTED.
+      EXI_ACTIVITY[] = <LI_MASTER_DATA>[].
+    ELSEIF EXI_COSTCTR IS REQUESTED.
+      EXI_COSTCTR[] = <LI_MASTER_DATA>[].
+    ELSEIF EXI_PRFITCTR IS REQUESTED.
+      EXI_PRFITCTR[] = <LI_MASTER_DATA>[].
+    ELSEIF EXI_BUSAREA IS REQUESTED.
+      EXI_BUSAREA[] = <LI_MASTER_DATA>[].
+    ELSEIF EXI_KELCPX IS REQUESTED.
+      EXI_KELCPX[] = <LI_MASTER_DATA>[].
+    ELSEIF EXI_SUBKLCPX IS REQUESTED.
+      EXI_SUBKLCPX[] = <LI_MASTER_DATA>[].
+    ELSEIF EXI_CPXACC IS REQUESTED.
+      EXI_CPXACC[] = <LI_MASTER_DATA>[].
     ENDIF.
 
   ENDMETHOD.
@@ -347,15 +501,29 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
 * | [--->] IMI_RANGE                      TYPE        RSDRI_T_RANGE(optional)
 * | [--->] IM_INFOPROVIDER                TYPE        RSD_INFOCUBE(optional)
 * | [<---] EXI_OPEX                       TYPE        ZTT_BPC_OPEX
+* | [<---] EXI_DSO_OPEX                   TYPE        ZTT_BPC_DSO_OPEX
+* | [<---] EXI_CAPEX                      TYPE        ZTT_BPC_CAPEX
+* | [<---] EXI_DSO_CAPEX                  TYPE        ZTT_BPC_DSO_CAPEX
+* | [<---] EXI_REVENUE                    TYPE        ZTT_BPC_REVENUE
+* | [<---] EXI_DSO_REVENUE                TYPE        ZTT_BPC_DSO_REVENUE
+* | [<---] EXI_FINANCIAL                  TYPE        ZTT_BPC_FINANCIAL
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD GET_INFOPROVIDER.
 
-    DATA:LI_OPEX     TYPE ZTT_BPC_OPEX,
-         LW_OPEX     TYPE ZST_BPC_OPEX.
-*         LI_DSO_OPEX TYPE ZTT_BPC_DSO_OPEX,
-*         LW_DSO_OPEX TYPE ZST_BPC_DSO_OPEX.
-*         li_capex TYPE ztt_bpc_capex,
-*         lw_capex TYPE zst_bpc_capex.
+    DATA: LI_OPEX        TYPE ZTT_BPC_OPEX,
+          LW_OPEX        TYPE ZST_BPC_OPEX,
+          LI_DSO_OPEX    TYPE ZTT_BPC_DSO_OPEX,
+          LW_DSO_OPEX    TYPE ZST_BPC_DSO_OPEX,
+          LI_CAPEX       TYPE ZTT_BPC_CAPEX,
+          LW_CAPEX       TYPE ZST_BPC_CAPEX,
+          LI_REVENUE     TYPE ZTT_BPC_REVENUE,
+          LW_REVENUE     TYPE ZST_BPC_REVENUE,
+          LI_FINANCIAL   TYPE ZTT_BPC_FINANCIAL,
+          LW_FINANCIAL   TYPE ZST_BPC_FINANCIAL,
+          LI_DSO_CAPEX   TYPE ZTT_BPC_DSO_CAPEX,
+          LW_DSO_CAPEX   TYPE ZST_BPC_DSO_CAPEX,
+          LI_DSO_REVENUE TYPE ZTT_BPC_DSO_REVENUE,
+          LW_DSO_REVENUE TYPE ZST_BPC_DSO_REVENUE.
     DATA: WA_SFC         TYPE RSDRI_S_SFC,
           LI_SFC         TYPE RSDRI_TH_SFC,
           WA_SFK         TYPE RSDRI_S_SFK,
@@ -373,9 +541,9 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
           LV_VSTRUCT     TYPE RSVIEWTIOBJNM2.
     DATA: L_R_S_VSTRUCT TYPE REF TO DATA.
 
-
     FIELD-SYMBOLS: <L_T_VSTRUCT> TYPE ANY TABLE,
-                   <L_S_VSTRUCT> TYPE ANY.
+                   <L_S_VSTRUCT> TYPE ANY,
+                   <TEMP>        TYPE ANY.
 
     DEFINE MC_RANGE_CHA.
       CLEAR &1.
@@ -438,12 +606,24 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
 
         CONTINUE.
 
-      ELSEIF WA_LIST_FIELDS-FIELDNAME EQ 'SIGN_DT'.
+      ELSEIF WA_LIST_FIELDS-FIELDNAME EQ 'SGNDT_1'.
+        _APPEND_SFK( EXPORTING IM_KYFNM    = LV_KYFNM IM_KYFALIAS = LV_ALIAS
+                 CHANGING CHI_SFK = LI_SFK ).
+      ELSEIF WA_LIST_FIELDS-FIELDNAME EQ 'SGNDT_2'.
+        _APPEND_SFK( EXPORTING IM_KYFNM    = LV_KYFNM IM_KYFALIAS = LV_ALIAS
+                 CHANGING CHI_SFK = LI_SFK ).
+      ELSEIF WA_LIST_FIELDS-FIELDNAME EQ 'SGNDT_QTY'.
         _APPEND_SFK( EXPORTING IM_KYFNM    = LV_KYFNM IM_KYFALIAS = LV_ALIAS
                  CHANGING CHI_SFK = LI_SFK ).
       ELSEIF WA_LIST_FIELDS-FIELDNAME EQ '1ROWCOUNT'.
         _APPEND_SFK( EXPORTING IM_KYFNM    = LV_KYFNM IM_KYFALIAS = LV_ALIAS IM_AGGR = 'CNT'
                  CHANGING CHI_SFK = LI_SFK ).
+      ELSEIF WA_LIST_FIELDS-FIELDNAME EQ 'SGNDT_PRC'.
+        _APPEND_SFK( EXPORTING IM_KYFNM    = LV_KYFNM IM_KYFALIAS = LV_ALIAS
+                CHANGING CHI_SFK = LI_SFK ).
+      ELSEIF WA_LIST_FIELDS-FIELDNAME EQ 'SGNDT_PRG'.
+        _APPEND_SFK( EXPORTING IM_KYFNM    = LV_KYFNM IM_KYFALIAS = LV_ALIAS
+                CHANGING CHI_SFK = LI_SFK ).
       ELSE.
         _APPEND_SFC( EXPORTING IM_CHANM    = LV_CHANM  IM_CHAALIAS = LV_ALIAS
                  CHANGING CHI_SFC = LI_SFC ).
@@ -451,11 +631,6 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
 
 
     ENDLOOP.
-
-*&---------------------------------------------------------------------*
-*& CREATE RANGE
-*&---------------------------------------------------------------------*
-*    MC_RANGE_CHA WA_RANGE 'ZSTATUS' 'SUBMIT' LI_RANGE.
 
 *&---------------------------------------------------------------------*
 *& PROCESSING
@@ -517,18 +692,69 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
       EXI_OPEX[] = LI_OPEX[].
 
 *- CAPEX ---------------------*
-*    ELSEIF EXI_capex is REQUESTED.
+    ELSEIF LV_INFOCUBE = GA_CUBE_CAPEX.
+      LOOP AT <L_T_VSTRUCT> ASSIGNING <L_S_VSTRUCT>.
+        MOVE-CORRESPONDING <L_S_VSTRUCT> TO LW_CAPEX.
+        APPEND LW_CAPEX TO LI_CAPEX.
+      ENDLOOP.
+      EXI_CAPEX[] = LI_CAPEX[].
 
-*- DSO Opex ------------------------------------------------*
+*- REVENUE ---------------------*
+    ELSEIF LV_INFOCUBE = GA_CUBE_REV.
+      LOOP AT <L_T_VSTRUCT> ASSIGNING <L_S_VSTRUCT>.
+        MOVE-CORRESPONDING <L_S_VSTRUCT> TO LW_REVENUE.
+        APPEND LW_REVENUE TO LI_REVENUE.
+      ENDLOOP.
+      EXI_CAPEX[] = LI_CAPEX[].
+
+*- FINANCIAL -------------------------*
+    ELSEIF LV_INFOCUBE = GA_CUBE_FIN.
+      LOOP AT <L_T_VSTRUCT> ASSIGNING <L_S_VSTRUCT>.
+        MOVE-CORRESPONDING <L_S_VSTRUCT> TO LW_FINANCIAL.
+        APPEND LW_FINANCIAL TO LI_FINANCIAL.
+      ENDLOOP.
+      EXI_FINANCIAL[] = LI_FINANCIAL[].
+
+*- DSO Capex ------------------------------------------------*
     ELSEIF LV_INFOCUBE = GA_DSO_OPEX.
-*      LOOP AT <L_T_VSTRUCT> ASSIGNING <L_S_VSTRUCT>.
-*        MOVE-CORRESPONDING <L_S_VSTRUCT> TO LW_DSO_OPEX.
-*        APPEND LW_DSO_OPEX TO LI_DSO_OPEX.
-*      ENDLOOP.
-*      EXI_DSO_OPEX[] = LI_DSO_OPEX[].
+      LOOP AT <L_T_VSTRUCT> ASSIGNING <L_S_VSTRUCT>.
+        MOVE-CORRESPONDING <L_S_VSTRUCT> TO LW_DSO_OPEX.
+
+        "This probably had to be fixed in future --- !!
+*        ASSIGN COMPONENT 'SGNDT_2' OF STRUCTURE <L_S_VSTRUCT> TO <TEMP>.
+*        IF SY-SUBRC EQ 0.
+*          LW_DSO_OPEX-SGNDT_TOTAL = <TEMP>.
+*        ENDIF.
+
+        APPEND LW_DSO_OPEX TO LI_DSO_OPEX.
+      ENDLOOP.
+      EXI_DSO_OPEX[] = LI_DSO_OPEX[].
+    ELSEIF LV_INFOCUBE = GA_DSO_CPX.
+      LOOP AT <L_T_VSTRUCT> ASSIGNING <L_S_VSTRUCT>.
+        MOVE-CORRESPONDING <L_S_VSTRUCT> TO LW_DSO_CAPEX.
+
+        ASSIGN COMPONENT 'SGNDT_2' OF STRUCTURE <L_S_VSTRUCT> TO <TEMP>.
+        IF SY-SUBRC EQ 0.
+          LW_DSO_CAPEX-SGNDT_2 = <TEMP>.
+        ENDIF.
+
+        APPEND LW_DSO_CAPEX TO LI_DSO_CAPEX.
+      ENDLOOP.
+      EXI_DSO_CAPEX[] = LI_DSO_CAPEX[].
+*- DSO Revenue ------------------------------------------------*
+    ELSEIF LV_INFOCUBE = GA_DSO_REV.
+      LOOP AT <L_T_VSTRUCT> ASSIGNING <L_S_VSTRUCT>.
+        MOVE-CORRESPONDING <L_S_VSTRUCT> TO LW_DSO_REVENUE.
+
+        ASSIGN COMPONENT 'SGNDT_2' OF STRUCTURE <L_S_VSTRUCT> TO <TEMP>.
+        IF SY-SUBRC EQ 0.
+          LW_DSO_REVENUE-SGNDT_2 = <TEMP>.
+        ENDIF.
+
+        APPEND LW_DSO_REVENUE TO LI_DSO_REVENUE.
+      ENDLOOP.
+      EXI_DSO_REVENUE[] = LI_DSO_REVENUE[].
     ENDIF.
-
-
 
   ENDMETHOD.
 
@@ -537,6 +763,8 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
 * | Static Public Method ZCL_BPC_BASIC=>SAVE_ADSO
 * +-------------------------------------------------------------------------------------------------+
 * | [--->] IM_RSOADSONM                   TYPE        RSOADSONM
+* | [--->] IMW_HEADER_DATA                TYPE        ZTGRF_HEADER
+* | [--->] IMI_DETAIL_ACTIVITY            TYPE        ZCL_BPC_BASIC=>TT_ACTIVITY_DATA
 * | [<---] EXR_TABLESTRUC                 TYPE        DATA
 * | [<---] EX_GEN_SUCCESFUL               TYPE        RS_BOOL
 * +--------------------------------------------------------------------------------------</SIGNATURE>
@@ -553,11 +781,16 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
           LR_LOG              TYPE REF TO CL_RSDSO_LOG,
           LR_GEN_FAILED       TYPE REF TO CX_STATIC_CHECK,
           LR_OPERATION_FAILED TYPE REF TO CX_RSDSO_ROOT.
-    DATA: "LI_DSO_OPEX TYPE ZTT_BPC_DSO_OPEX,
-          "LW_DSO_OPEX TYPE ZST_BPC_DSO_OPEX,
-          LI_COMP_TAB TYPE ABAP_COMPONENT_TAB,
-          LW_COMP_TAB LIKE LINE OF LI_COMP_TAB.
+    DATA: LI_DSO_OPEX    TYPE ZTT_BPC_DSO_OPEX,
+          LW_DSO_OPEX    TYPE ZST_BPC_DSO_OPEX,
+          LI_DSO_CAPEX   TYPE ZTT_BPC_DSO_CAPEX,
+          LW_DSO_CAPEX   TYPE ZST_BPC_DSO_CAPEX,
+          LI_DSO_REVENUE TYPE ZTT_BPC_DSO_REVENUE,
+          LW_DSO_REVENUE TYPE ZST_BPC_DSO_REVENUE,
+          LI_COMP_TAB    TYPE ABAP_COMPONENT_TAB,
+          LW_COMP_TAB    LIKE LINE OF LI_COMP_TAB.
     DATA:   LT_AGGR TYPE CL_RSDSO_DSOWRITER_API=>TN_T_AGGR.
+    DATA : LV_UPD_COUNT TYPE I.
 
     FIELD-SYMBOLS: <LT_DATA>  TYPE TABLE,
                    <LS_DATA>  TYPE ANY,
@@ -581,63 +814,179 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
     "it supposed to be from input from selection-screen
 *---------------------- Fill Up Data ---------------------*
     IF IM_RSOADSONM EQ GA_DSO_OPEX.
-*      CALL METHOD ZCL_BPC_BASIC=>_DSO_FILL_UP_DATA
-*        EXPORTING
-*          IMW_HEADER_DATA     = IMW_HEADER_DATA
-*          IMI_DETAIL_ACTIVITY = IMI_DETAIL_ACTIVITY
-*        IMPORTING
-*          EXI_OPEX            = LI_DSO_OPEX.
+      CALL METHOD ZCL_BPC_BASIC=>_DSO_FILL_UP_DATA
+        EXPORTING
+          IMW_HEADER_DATA     = IMW_HEADER_DATA
+          IMI_DETAIL_ACTIVITY = IMI_DETAIL_ACTIVITY
+        IMPORTING
+          EXI_OPEX            = LI_DSO_OPEX.
+    ELSEIF IM_RSOADSONM EQ GA_DSO_CPX.
+      CALL METHOD ZCL_BPC_BASIC=>_DSO_FILL_UP_DATA
+        EXPORTING
+          IMW_HEADER_DATA     = IMW_HEADER_DATA
+          IMI_DETAIL_ACTIVITY = IMI_DETAIL_ACTIVITY
+        IMPORTING
+          EXI_CAPEX           = LI_DSO_CAPEX.
+    ELSEIF IM_RSOADSONM EQ GA_DSO_REV.
+      CALL METHOD ZCL_BPC_BASIC=>_DSO_FILL_UP_DATA
+        EXPORTING
+          IMW_HEADER_DATA     = IMW_HEADER_DATA
+          IMI_DETAIL_ACTIVITY = IMI_DETAIL_ACTIVITY
+        IMPORTING
+          EXI_REVENUE         = LI_DSO_REVENUE.
     ENDIF.
 
-
-    "transforms into data type
-*    LOOP AT LI_DSO_OPEX INTO LW_DSO_OPEX.
-*
-*      LOOP AT LI_COMP_TAB INTO LW_COMP_TAB.
-*
-*        ASSIGN COMPONENT LW_COMP_TAB-NAME OF STRUCTURE <LS_DATA>
-*            TO <FS_VALUE>.
-*
-*        CASE LW_COMP_TAB-NAME.
-*          WHEN '/BIC/ZSTATUS'.
-*            MOVE LW_DSO_OPEX-ZSTATUS TO <FS_VALUE>.
-*          WHEN '/BIC/ZRPTCURR'.
-*            MOVE LW_DSO_OPEX-ZRPTCURR TO <FS_VALUE>.
-*          WHEN '/BIC/ZACCOUNT'.
-*            MOVE LW_DSO_OPEX-ZACCOUNT TO <FS_VALUE>.
-*          WHEN '/BIC/ZCOSTCTR'.
-*            MOVE LW_DSO_OPEX-ZCOSTCTR TO <FS_VALUE>.
-*          WHEN '/BIC/ZENTITY'.
-*            MOVE LW_DSO_OPEX-ZENTITY TO <FS_VALUE>.
-*          WHEN '/BIC/ZCYCLE'.
-*            MOVE LW_DSO_OPEX-ZCYCLE TO <FS_VALUE>.
-*          WHEN '/BIC/ZCATEGORY'.
-*            MOVE LW_DSO_OPEX-ZCYCLE TO <FS_VALUE>.
-*          WHEN '/BIC/ZRAB'.
-*            MOVE LW_DSO_OPEX-ZRAB TO <FS_VALUE>.
-*          WHEN '/BIC/ZBUSAREA'.
-*            MOVE LW_DSO_OPEX-ZBUSAREA TO <FS_VALUE>.
-*          WHEN '/BIC/ZACTIVITY'.
-*            MOVE LW_DSO_OPEX-ZACTIVITY TO <FS_VALUE>.
-*          WHEN 'FISCPER'.
-*            MOVE LW_DSO_OPEX-0FISCPER TO <FS_VALUE>.
-*          WHEN '/BIC/SGNDT_1'.
-*            MOVE LW_DSO_OPEX-SGNDT_1 TO <FS_VALUE>.
-*          WHEN '/BIC/SGNDT_QTY'.
-*            MOVE LW_DSO_OPEX-SGNDT_QTY TO <FS_VALUE>.
-*          WHEN 'FISCVARNT'.
-*            MOVE LW_DSO_OPEX-0FISCVARNT TO <FS_VALUE>.
-*          WHEN OTHERS.
-*        ENDCASE.
-*
-*      ENDLOOP.
-*
-*      APPEND <LS_DATA> TO <LT_DATA>.
-*
-*    ENDLOOP.
-
-
-
+    CASE IM_RSOADSONM.
+      WHEN GA_DSO_OPEX.
+        "transforms into data type
+        LOOP AT LI_DSO_OPEX INTO LW_DSO_OPEX.
+          LOOP AT LI_COMP_TAB INTO LW_COMP_TAB.
+            ASSIGN COMPONENT LW_COMP_TAB-NAME OF STRUCTURE <LS_DATA>
+                TO <FS_VALUE>.
+            CASE LW_COMP_TAB-NAME.
+              WHEN '/BIC/ZSTATUS'.
+                MOVE LW_DSO_OPEX-ZSTATUS TO <FS_VALUE>.
+              WHEN '/BIC/ZRPTCURR'.
+                MOVE LW_DSO_OPEX-ZRPTCURR TO <FS_VALUE>.
+              WHEN '/BIC/ZACCOUNT'.
+                MOVE LW_DSO_OPEX-ZACCOUNT TO <FS_VALUE>.
+              WHEN '/BIC/ZCOSTCTR'.
+                MOVE LW_DSO_OPEX-ZCOSTCTR TO <FS_VALUE>.
+              WHEN '/BIC/ZENTITY'.
+                MOVE LW_DSO_OPEX-ZENTITY TO <FS_VALUE>.
+              WHEN 'CALYEAR'.
+                MOVE LW_DSO_OPEX-ZCYCLE TO <FS_VALUE>.
+              WHEN '/BIC/ZCATEGORY'.
+                MOVE LW_DSO_OPEX-ZCATEGORY TO <FS_VALUE>.
+              WHEN '/BIC/ZRAB'.
+                MOVE LW_DSO_OPEX-ZRAB TO <FS_VALUE>.
+              WHEN '/BIC/ZBUSAREA'.
+                MOVE LW_DSO_OPEX-ZBUSAREA TO <FS_VALUE>.
+              WHEN '/BIC/ZACTIVITY'.
+                MOVE LW_DSO_OPEX-ZACTIVITY TO <FS_VALUE>.
+              WHEN 'FISCPER'.
+                MOVE LW_DSO_OPEX-0FISCPER TO <FS_VALUE>.
+              WHEN '/BIC/SGNDT_QTY'.
+                MOVE LW_DSO_OPEX-SGNDT_QTY TO <FS_VALUE>.
+              WHEN '/BIC/SGNDT_PRC'.
+                MOVE LW_DSO_OPEX-SGNDT_PRC TO <FS_VALUE>.
+              WHEN '/BIC/SGNDT_1'.
+                MOVE LW_DSO_OPEX-SGNDT_1 TO <FS_VALUE>.
+              WHEN '/BIC/SGNDT_2'.
+                MOVE LW_DSO_OPEX-SGNDT_2 TO <FS_VALUE>.
+              WHEN 'FISCVARNT'.
+                MOVE LW_DSO_OPEX-0FISCVARNT TO <FS_VALUE>.
+              WHEN '/BIC/ZBGTSTEP'.
+                MOVE LW_DSO_OPEX-ZBGTSTEP TO <FS_VALUE>.
+              WHEN OTHERS.
+            ENDCASE.
+          ENDLOOP.
+          APPEND <LS_DATA> TO <LT_DATA>.
+        ENDLOOP.
+      WHEN GA_DSO_CPX.
+        "transforms into data type
+        LOOP AT LI_DSO_CAPEX INTO LW_DSO_CAPEX.
+          LOOP AT LI_COMP_TAB INTO LW_COMP_TAB.
+            ASSIGN COMPONENT LW_COMP_TAB-NAME OF STRUCTURE <LS_DATA>
+                TO <FS_VALUE>.
+            CASE LW_COMP_TAB-NAME.
+              WHEN '/BIC/ZSTATUS'.
+                MOVE LW_DSO_CAPEX-ZSTATUS TO <FS_VALUE>.
+              WHEN '/BIC/ZRPTCURR'.
+                MOVE LW_DSO_CAPEX-ZRPTCURR TO <FS_VALUE>.
+              WHEN '/BIC/ZACCOUNT'.
+                MOVE LW_DSO_CAPEX-ZACCOUNT TO <FS_VALUE>.
+              WHEN '/BIC/ZCOSTCTR'.
+                MOVE LW_DSO_CAPEX-ZCOSTCTR TO <FS_VALUE>.
+              WHEN '/BIC/ZENTITY'.
+                MOVE LW_DSO_CAPEX-ZENTITY TO <FS_VALUE>.
+              WHEN 'CALYEAR'.
+                MOVE LW_DSO_CAPEX-0CALYEAR TO <FS_VALUE>.
+              WHEN '/BIC/ZCATEGORY'.
+                MOVE LW_DSO_CAPEX-ZCATEGORY TO <FS_VALUE>.
+              WHEN '/BIC/ZRAB'.
+                MOVE LW_DSO_CAPEX-ZRAB TO <FS_VALUE>.
+              WHEN '/BIC/ZBUSAREA'.
+                MOVE LW_DSO_CAPEX-ZBUSAREA TO <FS_VALUE>.
+              WHEN '/BIC/ZACTIVITY'.
+                MOVE LW_DSO_CAPEX-ZACTIVITY TO <FS_VALUE>.
+              WHEN 'FISCPER'.
+                MOVE LW_DSO_CAPEX-0FISCPER TO <FS_VALUE>.
+              WHEN '/BIC/SGNDT_1'.
+                MOVE LW_DSO_CAPEX-SGNDT_1 TO <FS_VALUE>.
+              WHEN '/BIC/SGNDT_2'.
+                MOVE LW_DSO_CAPEX-SGNDT_2 TO <FS_VALUE>.
+              WHEN '/BIC/SGNDT_QTY'.
+                MOVE LW_DSO_CAPEX-SGNDT_QTY TO <FS_VALUE>.
+              WHEN '/BIC/SGNDT_PRC'.
+                MOVE LW_DSO_CAPEX-SGNDT_PRC TO <FS_VALUE>.
+              WHEN '/BIC/SGNDT_PRG'.
+                MOVE LW_DSO_CAPEX-SGNDT_PRG TO <FS_VALUE>.
+              WHEN 'FISCVARNT'.
+                MOVE LW_DSO_CAPEX-0FISCVARNT TO <FS_VALUE>.
+              WHEN '/BIC/ZBGTSTEP'.
+                MOVE LW_DSO_CAPEX-ZBGTSTEP TO <FS_VALUE>.
+              WHEN '/BIC/ZCPXACC'.
+                MOVE LW_DSO_CAPEX-ZCPXACC TO <FS_VALUE>.
+              WHEN '/BIC/ZCPXOBJ'.
+                MOVE LW_DSO_CAPEX-ZCPXOBJ TO <FS_VALUE>.
+              WHEN OTHERS.
+            ENDCASE.
+          ENDLOOP.
+          APPEND <LS_DATA> TO <LT_DATA>.
+        ENDLOOP.
+      WHEN GA_DSO_REV.
+        "transforms into data type
+        LOOP AT LI_DSO_REVENUE INTO LW_DSO_REVENUE.
+          LOOP AT LI_COMP_TAB INTO LW_COMP_TAB.
+            ASSIGN COMPONENT LW_COMP_TAB-NAME OF STRUCTURE <LS_DATA>
+                TO <FS_VALUE>.
+            CASE LW_COMP_TAB-NAME.
+              WHEN '/BIC/ZSTATUS'.
+                MOVE LW_DSO_REVENUE-ZSTATUS TO <FS_VALUE>.
+              WHEN '/BIC/ZRPTCURR'.
+                MOVE LW_DSO_REVENUE-ZRPTCURR TO <FS_VALUE>.
+              WHEN '/BIC/ZACCOUNT'.
+                MOVE LW_DSO_REVENUE-ZACCOUNT TO <FS_VALUE>.
+              WHEN '/BIC/ZPRFITCTR'.
+                MOVE LW_DSO_REVENUE-ZPRFITCTR TO <FS_VALUE>.
+              WHEN '/BIC/ZENTITY'.
+                MOVE LW_DSO_REVENUE-ZENTITY TO <FS_VALUE>.
+              WHEN 'CALYEAR'.
+                MOVE LW_DSO_REVENUE-0CALYEAR TO <FS_VALUE>.
+              WHEN '/BIC/ZCATEGORY'.
+                MOVE LW_DSO_REVENUE-ZCATEGORY TO <FS_VALUE>.
+              WHEN '/BIC/ZRAB'.
+                MOVE LW_DSO_REVENUE-ZRAB TO <FS_VALUE>.
+              WHEN '/BIC/ZBUSAREA'.
+                MOVE LW_DSO_REVENUE-ZBUSAREA TO <FS_VALUE>.
+              WHEN '/BIC/ZACTIVITY'.
+                MOVE LW_DSO_REVENUE-ZACTIVITY TO <FS_VALUE>.
+              WHEN 'FISCPER'.
+                MOVE LW_DSO_REVENUE-0FISCPER TO <FS_VALUE>.
+              WHEN '/BIC/SGNDT_1'.
+                MOVE LW_DSO_REVENUE-SGNDT_1 TO <FS_VALUE>.
+              WHEN '/BIC/SGNDT_2'.
+                MOVE LW_DSO_REVENUE-SGNDT_2 TO <FS_VALUE>.
+              WHEN '/BIC/SGNDT_QTY'.
+                MOVE LW_DSO_REVENUE-SGNDT_QTY TO <FS_VALUE>.
+              WHEN '/BIC/SGNDT_PRC'.
+                MOVE LW_DSO_REVENUE-SGNDT_PRC TO <FS_VALUE>.
+              WHEN 'FISCVARNT'.
+                MOVE LW_DSO_REVENUE-0FISCVARNT TO <FS_VALUE>.
+              WHEN '/BIC/ZBGTSTEP'.
+                MOVE LW_DSO_REVENUE-ZBGTSTEP TO <FS_VALUE>.
+              WHEN '/BIC/ZCPXACC'.
+                MOVE LW_DSO_REVENUE-ZCPXACC TO <FS_VALUE>.
+              WHEN '/BIC/ZCPXOBJ'.
+                MOVE LW_DSO_REVENUE-ZCPXOBJ TO <FS_VALUE>.
+              WHEN OTHERS.
+            ENDCASE.
+          ENDLOOP.
+          APPEND <LS_DATA> TO <LT_DATA>.
+        ENDLOOP.
+      WHEN OTHERS.
+    ENDCASE.
 *&---------------------------------------------------------------------*
 *& PUSH DATA INTO ADSO
 *&---------------------------------------------------------------------*
@@ -753,7 +1102,9 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
 * <SIGNATURE>---------------------------------------------------------------------------------------+
 * | Static Public Method ZCL_BPC_BASIC=>SAVE_INFOCUBE
 * +-------------------------------------------------------------------------------------------------+
-* | [--->] IMI_OPEX                       TYPE        ZTT_BPC_OPEX
+* | [--->] IMI_OPEX                       TYPE        ZTT_BPC_OPEX(optional)
+* | [--->] IMI_CAPEX                      TYPE        ZTT_BPC_CAPEX(optional)
+* | [--->] IMI_REVENUE                    TYPE        ZTT_BPC_REVENUE(optional)
 * | [<---] EXI_MESSAGE                    TYPE        RSDRI_TS_MSG
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD SAVE_INFOCUBE.
@@ -762,18 +1113,25 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
           LV_ADSONAME TYPE RSD_INFOCUBE.
     DATA: LI_MESSAGE TYPE RSDRI_TS_MSG,
           LI_OPEX    TYPE ZTT_BPC_OPEX,
-          LW_OPEX    TYPE ZST_BPC_OPEX.
+          LW_OPEX    TYPE ZST_BPC_OPEX,
+          LI_CAPEX   TYPE ZTT_BPC_CAPEX,
+          LW_CAPEX   TYPE ZST_BPC_CAPEX,
+          LI_REVENUE TYPE ZTT_BPC_REVENUE,
+          LW_REVENUE TYPE ZST_BPC_REVENUE.
     DATA: LR_DATA  TYPE REF TO DATA,
           LRS_DATA TYPE REF TO DATA.
     FIELD-SYMBOLS: <LI_DATA> TYPE STANDARD TABLE,
                    <LW_DATA> TYPE ANY.
-
 *---------------------- Get Infocube Name ---------------------*
     IF IMI_OPEX IS NOT INITIAL.
-
       LV_INFOCUBE = GA_CUBE_OPEX.
       LV_ADSONAME = GA_DSO_OPEX.
-
+    ELSEIF IMI_CAPEX IS NOT INITIAL.
+      LV_INFOCUBE = GA_CUBE_CAPEX.
+      LV_ADSONAME = GA_DSO_CPX.
+    ELSEIF IMI_REVENUE IS NOT INITIAL.
+      LV_INFOCUBE = GA_CUBE_REV.
+      LV_ADSONAME = GA_DSO_REV.
     ENDIF.
 
 *- Create Itab w/ structure of Infocube ---------------------*
@@ -793,26 +1151,192 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
 
       LOOP AT LI_OPEX INTO LW_OPEX.
 
-        move-CORRESPONDING lw_opex to <lw_data>.
-        append <lw_data> to <li_data>.
+        MOVE-CORRESPONDING LW_OPEX TO <LW_DATA>.
+        APPEND <LW_DATA> TO <LI_DATA>.
 
       ENDLOOP.
+    ELSEIF IMI_CAPEX IS NOT INITIAL.
+      LI_CAPEX[] = IMI_CAPEX[].
+
+      LOOP AT LI_CAPEX INTO LW_CAPEX.
+
+        MOVE-CORRESPONDING LW_CAPEX TO <LW_DATA>.
+        APPEND <LW_DATA> TO <LI_DATA>.
+
+      ENDLOOP.
+    ELSEIF IMI_REVENUE IS NOT INITIAL.
+      LI_REVENUE[] = IMI_REVENUE[].
+
+      LOOP AT LI_REVENUE INTO LW_REVENUE.
+
+        MOVE-CORRESPONDING LW_REVENUE TO <LW_DATA>.
+        APPEND <LW_DATA> TO <LI_DATA>.
+
+      ENDLOOP.
+    ENDIF.
+
+    IF <LI_DATA> IS NOT INITIAL.
+
+*---------------------- Write into Infocube ---------------------*
+      CALL FUNCTION 'RSDRI_CUBE_WRITE_PACKAGE'
+        EXPORTING
+          I_INFOCUBE        = LV_INFOCUBE
+          I_CURR_CONVERSION = RS_C_FALSE
+        IMPORTING
+          E_TS_MSG          = LI_MESSAGE
+        CHANGING
+          C_T_DATA          = <LI_DATA>
+        EXCEPTIONS
+          OTHERS            = 1.
 
     ENDIF.
 
+    IF LI_MESSAGE[] IS NOT INITIAL.
+      EXI_MESSAGE[] = LI_MESSAGE[].
+    ENDIF.
 
-*---------------------- Write into Infocube ---------------------*
-    CALL FUNCTION 'RSDRI_CUBE_WRITE_PACKAGE'
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Public Method ZCL_BPC_BASIC=>SAVE_INFOOBJECT
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IM_IOBJNM                      TYPE        RSIOBJNM
+* | [--->] IMI_IO_DATA                    TYPE        STANDARD TABLE
+* | [--->] IMI_IO_TEXT                    TYPE        ZCL_BPC_BASIC=>TT_IO_DATA
+* | [<---] EXI_MESSAGE                    TYPE        ZCL_BPC_BASIC=>TT_MESSAGE
+* | [<---] EX_SUCCESS                     TYPE        BOOLEAN
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD SAVE_INFOOBJECT.
+
+    DATA: LV_IOBJNM  TYPE RSIOBJNM,
+          LV_SUBRC   TYPE SYSUBRC,
+          LV_CHANM   TYPE RSD_CHANM,
+          LV_SUCCESS TYPE BOOLEAN,
+          LV_RECORD  TYPE I.
+    DATA: LI_DATA       TYPE TABLE OF RSNDI_S_CHAVL_MAX,
+          LW_DATA       TYPE RSNDI_S_CHAVL_MAX,
+          LI_DATA_TEXT  TYPE ZCL_BPC_BASIC=>TT_IO_DATA,
+          LW_DATA_TEXT  TYPE ZCL_BPC_BASIC=>TS_IO_DATA,
+          LI_MESSAGE    TYPE ZCL_BPC_BASIC=>TT_MESSAGE,
+          LW_MESSAGE    TYPE ZCL_BPC_BASIC=>TS_MESSAGE,
+          LI_ATTRIBUTE  TYPE ZCL_BPC_BASIC=>TT_IOBJNM,
+          LW_ATTRIBUTE  TYPE ZCL_BPC_BASIC=>TS_IOBJNM,
+          LI_COMPONENTS TYPE IF_RSD_CHA_PROP=>NT_TH_ATR_PROP,
+          LW_COMPONENTS LIKE LINE OF LI_COMPONENTS,
+          LI_XL_TEXT    TYPE RSNDI_T_XL_TEXT,
+          LW_XL_TEXT    LIKE LINE OF LI_XL_TEXT.
+    DATA: LI_IO_CPXOBJ TYPE ZTT_BPC_IO_CPXOBJ,
+          LW_IO_CPXOBJ TYPE ZST_BPC_IO_CPXOBJ.
+
+    FIELD-SYMBOLS: <LI_INPUT_DATA> TYPE ANY TABLE,
+                   <LW_INPUT_DATA> TYPE ANY.
+
+*- Initialization -------------------------*
+    MOVE IM_IOBJNM TO LV_IOBJNM.
+    CLEAR LV_SUBRC.
+
+*    BREAK-POINT.
+
+*- Handle Import Data -------------------------*
+    ASSIGN IMI_IO_DATA TO <LI_INPUT_DATA>.
+
+*- Build Internal Table -------------------------*
+*- Get Attribute & Data -------------------------*
+
+    REFRESH: LI_ATTRIBUTE[],
+              LI_DATA[].
+
+    CALL METHOD ZCL_BPC_BASIC=>_IO_FILL_UP_DATA
       EXPORTING
-        I_INFOCUBE        = lv_INFOCUBE
-        I_CURR_CONVERSION = RS_C_FALSE
+        IM_IOBJNM      = LV_IOBJNM
+        IMI_IO_DATA    = <LI_INPUT_DATA>
       IMPORTING
-        E_TS_MSG          = LI_MESSAGE
-      CHANGING
-        C_T_DATA          = <LI_DATA>
-      EXCEPTIONS
-        OTHERS            = 1.
+        EXI_ATTRIBUTES = LI_ATTRIBUTE
+        EXI_IO_DATA    = LI_DATA.
 
+    IF IMI_IO_TEXT[] IS NOT INITIAL.
+      LI_DATA_TEXT[] = IMI_IO_TEXT[].
+    ENDIF.
+
+
+*- Save Master Data -------------------------*
+    CALL FUNCTION 'RSNDI_MD_ATTRIBUTES_UPDATE_4'
+      EXPORTING
+        I_IOBJNM                    = LV_IOBJNM
+        I_UPDATE_ALL_ATTRIBUTES     = RS_C_FALSE
+        I_CLEAR_UNMAPPED_ATTRIBUTES = RS_C_FALSE
+        I_CHAVL_ENQUEUE             = RS_C_TRUE
+        I_DB_COMMIT                 = RS_C_TRUE
+        I_COMMIT_WORK               = RS_C_FALSE
+        I_PROTOCOL                  = RS_C_FALSE
+        I_NO_APPL_LOGGING           = RS_C_FALSE
+      IMPORTING
+        E_SUBRC                     = LV_SUBRC
+      TABLES
+        I_T_ATTRIBUTES              = LI_ATTRIBUTE
+        I_T_DATA                    = LI_DATA
+        E_T_MESSAGES                = LI_MESSAGE.
+
+*- Save Text Data -------------------------*
+    CALL FUNCTION 'RSNDI_MD_TEXTS_UPDATE_4'
+      EXPORTING
+        I_IOBJNM          = LV_IOBJNM
+        I_CHAVL_ENQUEUE   = RS_C_FALSE
+        I_DB_COMMIT       = RS_C_TRUE
+        I_COMMIT_WORK     = RS_C_FALSE
+        I_T_XL_TEXT       = LI_XL_TEXT
+        I_PROTOCOL        = RS_C_FALSE
+        I_NO_APPL_LOGGING = RS_C_FALSE
+      IMPORTING
+        E_SUBRC           = LV_SUBRC
+      TABLES
+        I_T_DATA          = LI_DATA_TEXT
+        E_T_MESSAGES      = LI_MESSAGE.
+
+*- Activate Master Data -------------------------*
+    IF LI_MESSAGE[] IS INITIAL.
+
+      MOVE LV_IOBJNM TO LV_CHANM.
+
+      CALL FUNCTION 'RSDMD_MD_ACTIVATE'
+        EXPORTING
+          I_CHABASNM = LV_CHANM.
+
+*-- 1. Message Handling for Activation -------------------------*
+      LW_MESSAGE-MSGTY = SY-MSGTY.
+      LW_MESSAGE-MSGID = SY-MSGID.
+      LW_MESSAGE-MSGNO = SY-MSGNO.
+      LW_MESSAGE-MSGV1 = SY-MSGV1.
+      LW_MESSAGE-MSGV2 = SY-MSGV2.
+      LW_MESSAGE-MSGV3 = SY-MSGV3.
+      LW_MESSAGE-MSGV4 = SY-MSGV4.
+      APPEND LW_MESSAGE TO LI_MESSAGE.
+      DELETE ADJACENT DUPLICATES FROM LI_MESSAGE.
+
+*-- 2. Message Handling for Saved Status of InfoObject -------------------------*
+      IF LW_MESSAGE-MSGTY = GA_ERROR.
+        LV_SUCCESS = RS_C_FALSE.
+      ELSEIF LW_MESSAGE-MSGID = 'RSDMD' AND LW_MESSAGE-MSGNO = 003.
+        FREE EXI_MESSAGE.
+        LW_MESSAGE-MSGTY = RS_C_SUCCESS.
+        LV_SUCCESS = RS_C_TRUE.
+        APPEND LW_MESSAGE TO LI_MESSAGE.
+      ELSE.
+        MESSAGE S182(RSDMD) WITH LV_IOBJNM.
+        LW_MESSAGE-MSGTY = SY-MSGTY.
+        LW_MESSAGE-MSGID = SY-MSGID.
+        LW_MESSAGE-MSGNO = SY-MSGNO.
+        LW_MESSAGE-MSGV1 = SY-MSGV1.
+        LW_MESSAGE-MSGV2 = SY-MSGV2.
+        LW_MESSAGE-MSGV3 = SY-MSGV3.
+        LW_MESSAGE-MSGV4 = SY-MSGV4.
+        APPEND LW_MESSAGE TO LI_MESSAGE.
+
+      ENDIF.
+    ENDIF.
+*- Export Values -------------------------*
+    MOVE LV_SUCCESS TO EX_SUCCESS.
     IF LI_MESSAGE[] IS NOT INITIAL.
       EXI_MESSAGE[] = LI_MESSAGE[].
     ENDIF.
@@ -969,33 +1493,34 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
 * | Static Private Method ZCL_BPC_BASIC=>_CUBE_GET_DATA_DSO
 * +-------------------------------------------------------------------------------------------------+
 * | [--->] IM_ADSONAME                    TYPE        RSD_INFOCUBE
+* | [<---] EXI_DSO_OPEX                   TYPE        ZTT_BPC_DSO_OPEX
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD _CUBE_GET_DATA_DSO.
 
-*    DATA: LI_OPEX     TYPE ZTT_BPC_OPEX,
-*          LI_DSO_OPEX TYPE ZTT_BPC_DSO_OPEX,
-*          LI_RANGE    TYPE RSDRI_T_RANGE,
-*          LW_RANGE    TYPE RSDRI_S_RANGE.
-*    DATA: LV_ADSO TYPE RSD_INFOCUBE.
-*
-**- Initialization ------------------------------------------------*
-*    MOVE IM_ADSONAME TO LV_ADSO.
-*
-**- Build Range for Submited Data ------------------------------------------------*
-*    REFRESH: LI_RANGE[].
-*    CLEAR: LW_RANGE.
-*
-**- Get Data from DSO based on Range ------------------------------------------------*
-*    CALL METHOD ZCL_BPC_BASIC=>GET_INFOPROVIDER
-*      EXPORTING
-*        IM_INFOPROVIDER = LV_ADSO
-*        IMI_RANGE       = LI_RANGE
-*      IMPORTING
-*        EXI_DSO_OPEX    = LI_DSO_OPEX.
-*
-*    IF EXI_DSO_OPEX IS REQUESTED.
-*      EXI_DSO_OPEX[] = LI_DSO_OPEX[].
-*    ENDIF.
+    DATA: LI_OPEX     TYPE ZTT_BPC_OPEX,
+          LI_DSO_OPEX TYPE ZTT_BPC_DSO_OPEX,
+          LI_RANGE    TYPE RSDRI_T_RANGE,
+          LW_RANGE    TYPE RSDRI_S_RANGE.
+    DATA: LV_ADSO TYPE RSD_INFOCUBE.
+
+*- Initialization ------------------------------------------------*
+    MOVE IM_ADSONAME TO LV_ADSO.
+
+*- Build Range for Submited Data ------------------------------------------------*
+    REFRESH: LI_RANGE[].
+    CLEAR: LW_RANGE.
+
+*- Get Data from DSO based on Range ------------------------------------------------*
+    CALL METHOD ZCL_BPC_BASIC=>GET_INFOPROVIDER
+      EXPORTING
+        IM_INFOPROVIDER = LV_ADSO
+        IMI_RANGE       = LI_RANGE
+      IMPORTING
+        EXI_DSO_OPEX    = LI_DSO_OPEX.
+
+    IF EXI_DSO_OPEX IS REQUESTED.
+      EXI_DSO_OPEX[] = LI_DSO_OPEX[].
+    ENDIF.
 
   ENDMETHOD.
 
@@ -1216,53 +1741,160 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
 * <SIGNATURE>---------------------------------------------------------------------------------------+
 * | Static Private Method ZCL_BPC_BASIC=>_DSO_FILL_UP_DATA
 * +-------------------------------------------------------------------------------------------------+
+* | [--->] IMW_HEADER_DATA                TYPE        ZTGRF_HEADER
+* | [--->] IMI_DETAIL_ACTIVITY            TYPE        ZCL_BPC_BASIC=>TT_ACTIVITY_DATA
+* | [<---] EXI_OPEX                       TYPE        ZTT_BPC_DSO_OPEX
+* | [<---] EXI_CAPEX                      TYPE        ZTT_BPC_DSO_CAPEX
+* | [<---] EXI_REVENUE                    TYPE        ZTT_BPC_DSO_REVENUE
 * +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD _DSO_FILL_UP_DATA.
 
-*    DATA: LW_HEADER   TYPE ZTGRF_HEADER,
-*          LW_DETAIL   TYPE ZCL_BPC_BASIC=>TS_ACTIVITY_DATA,
-*          LI_DETAIL   TYPE ZCL_BPC_BASIC=>TT_ACTIVITY_DATA,
-*          LW_DSO_OPEX TYPE ZST_BPC_DSO_OPEX,
-*          LI_DSO_OPEX TYPE ZTT_BPC_DSO_OPEX.
-*
-*    IF IMW_HEADER_DATA IS NOT INITIAL
-*      AND IMI_DETAIL_ACTIVITY[] IS NOT INITIAL.
-*      MOVE   IMW_HEADER_DATA TO LW_HEADER.
-*      LI_DETAIL[] = IMI_DETAIL_ACTIVITY[].
-*    ENDIF.
-*
-*
-*    IF EXI_OPEX IS REQUESTED.
-*      CLEAR LW_DSO_OPEX.
-**      LW_DSO_OPEX-0FISCPER = ???
-**- header ------------------------------------------------*
-*      LW_DSO_OPEX-0FISCVARNT = 'K4'.
-*      LW_DSO_OPEX-ZRAB = LW_HEADER-RABNUMBER.
-*      LW_DSO_OPEX-ZCATEGORY = LW_HEADER-BGT_CATEGORY.
-*      LW_DSO_OPEX-ZCYCLE = LW_HEADER-BGT_CYCLE.
-*      LW_DSO_OPEX-ZENTITY = LW_HEADER-ENTITY.
-*      LW_DSO_OPEX-ZCOSTCTR = LW_HEADER-COST_CENTER.
-*      LW_DSO_OPEX-ZACCOUNT = LW_HEADER-GLACC_BASE.
-*
-*      LW_DSO_OPEX-ZSTATUS = 'SAVE'.
-*
-**      LW_DSO_OPEX-ZRPTCURR = 'IDR'.???
-**      LW_DSO_OPEX-ZBUSAREA = 'JM00'.???
-**- detail ------------------------------------------------*
-*      LOOP AT LI_DETAIL INTO LW_DETAIL.
-*        LW_DSO_OPEX-ZACTIVITY = LW_DETAIL-ACTIVITY.
-*        LW_DSO_OPEX-0FISCPER = LW_DETAIL-PERIOD.
-*        LW_DSO_OPEX-SGNDT_QTY = LW_DETAIL-QUANTITY.
-*        LW_DSO_OPEX-SGNDT_1 = LW_DETAIL-PRICE.
-*        LW_DSO_OPEX-SGNDT_TOTAL = LW_DETAIL-QUANTITY * LW_DETAIL-PRICE.
-*        APPEND LW_DSO_OPEX TO LI_DSO_OPEX.
-*      ENDLOOP.
-*
-*      IF LI_DSO_OPEX[] IS NOT INITIAL.
-*        EXI_OPEX[] = LI_DSO_OPEX[].
-*      ENDIF.
-*
-*    ENDIF.
+    DATA: LW_HEADER      TYPE ZTGRF_HEADER,
+          LW_DETAIL      TYPE ZCL_BPC_BASIC=>TS_ACTIVITY_DATA,
+          LI_DETAIL      TYPE ZCL_BPC_BASIC=>TT_ACTIVITY_DATA,
+          LW_DSO_OPEX    TYPE ZST_BPC_DSO_OPEX,
+          LI_DSO_OPEX    TYPE ZTT_BPC_DSO_OPEX,
+          LW_DSO_CAPEX   TYPE ZST_BPC_DSO_CAPEX,
+          LI_DSO_CAPEX   TYPE ZTT_BPC_DSO_CAPEX,
+          LW_DSO_REVENUE TYPE ZST_BPC_DSO_REVENUE,
+          LI_DSO_REVENUE TYPE ZTT_BPC_DSO_REVENUE.
+
+    IF IMW_HEADER_DATA IS NOT INITIAL
+      AND IMI_DETAIL_ACTIVITY[] IS NOT INITIAL.
+      MOVE   IMW_HEADER_DATA TO LW_HEADER.
+      LI_DETAIL[] = IMI_DETAIL_ACTIVITY[].
+    ENDIF.
+
+
+    IF EXI_OPEX IS REQUESTED.
+      CLEAR LW_DSO_OPEX.
+*      LW_DSO_OPEX-0FISCPER = ???
+*- header ------------------------------------------------*
+      LW_DSO_OPEX-0FISCVARNT = 'K4'.
+      LW_DSO_OPEX-ZRAB = LW_HEADER-RABNUMBER.
+      LW_DSO_OPEX-ZCATEGORY = LW_HEADER-BGT_CATEGORY.
+      LW_DSO_OPEX-ZCYCLE = LW_HEADER-BGT_CYCLE.
+      LW_DSO_OPEX-ZENTITY = LW_HEADER-ENTITY.
+      LW_DSO_OPEX-ZCOSTCTR = LW_HEADER-COST_CENTER.
+      LW_DSO_OPEX-ZACCOUNT = LW_HEADER-GLACC_BASE.
+      LW_DSO_OPEX-ZBGTSTEP = LW_HEADER-BGT_STEP.
+      LW_DSO_OPEX-ZBUSAREA = LW_HEADER-BUS_AREA.
+      LW_DSO_OPEX-ZRPTCURR = LW_HEADER-CURRENCY.
+      LW_DSO_OPEX-ZSTATUS = 'SAVE'.
+
+*      LW_DSO_OPEX-ZRPTCURR = 'IDR'.???
+*      LW_DSO_OPEX-ZBUSAREA = 'JM00'.???
+*- detail ------------------------------------------------*
+      LOOP AT LI_DETAIL INTO LW_DETAIL.
+        LW_DSO_OPEX-ZACTIVITY = LW_DETAIL-ACTIVITY.
+        LW_DSO_OPEX-0FISCPER = LW_DETAIL-PERIOD.
+        LW_DSO_OPEX-SGNDT_QTY = LW_DETAIL-QUANTITY.
+        LW_DSO_OPEX-SGNDT_PRC = LW_DETAIL-PRICE.
+        LW_DSO_OPEX-SGNDT_1 = LW_DETAIL-TOTAL.
+        LW_DSO_OPEX-SGNDT_2 = LW_DETAIL-TOTAL_2.
+
+        CASE LW_DETAIL-IS_DELETE.
+          WHEN ABAP_TRUE.
+            LW_DSO_OPEX-ZSTATUS = 'DELETE'.
+          WHEN ABAP_FALSE.
+            LW_DSO_OPEX-ZSTATUS = 'SAVE'.
+          WHEN OTHERS.
+        ENDCASE.
+
+        APPEND LW_DSO_OPEX TO LI_DSO_OPEX.
+      ENDLOOP.
+
+      IF LI_DSO_OPEX[] IS NOT INITIAL.
+        EXI_OPEX[] = LI_DSO_OPEX[].
+      ENDIF.
+
+    ELSEIF EXI_CAPEX IS REQUESTED.
+
+      CLEAR LW_DSO_CAPEX.
+*      LW_DSO_capex-0FISCPER = ???
+*- header ------------------------------------------------*
+      LW_DSO_CAPEX-0FISCVARNT = 'K4'.
+      LW_DSO_CAPEX-ZRAB = LW_HEADER-RABNUMBER.
+      LW_DSO_CAPEX-ZCATEGORY = LW_HEADER-BGT_CATEGORY.
+      LW_DSO_CAPEX-0CALYEAR = LW_HEADER-BGT_CYCLE.
+      LW_DSO_CAPEX-ZENTITY = LW_HEADER-ENTITY.
+      LW_DSO_CAPEX-ZCOSTCTR = LW_HEADER-COST_CENTER.
+*      LW_DSO_CAPEX-ZACCOUNT = LW_HEADER-GLACC_BASE. "Special case for CAPEX where Account inline with item
+      LW_DSO_CAPEX-ZBGTSTEP = LW_HEADER-BGT_STEP.
+      LW_DSO_CAPEX-ZBUSAREA = LW_HEADER-BUS_AREA.
+      LW_DSO_CAPEX-ZRPTCURR = LW_HEADER-CURRENCY.
+      LW_DSO_CAPEX-ZSTATUS = 'SAVE'.
+      LW_DSO_CAPEX-ZCPXACC = LW_HEADER-CPX_ACT.
+      LW_DSO_CAPEX-ZCPXOBJ = LW_HEADER-CPX_OBJ.
+*      LW_DSO_OPEX-ZRPTCURR = 'IDR'.???
+*      LW_DSO_OPEX-ZBUSAREA = 'JM00'.???
+*- detail ------------------------------------------------*
+      LOOP AT LI_DETAIL INTO LW_DETAIL.
+        LW_DSO_CAPEX-ZACCOUNT = LW_DETAIL-ACCOUNT.
+        LW_DSO_CAPEX-ZACTIVITY = LW_DETAIL-ACTIVITY.
+        LW_DSO_CAPEX-0FISCPER = LW_DETAIL-PERIOD.
+        LW_DSO_CAPEX-SGNDT_QTY = LW_DETAIL-QUANTITY.
+        LW_DSO_CAPEX-SGNDT_PRC = LW_DETAIL-PRICE.
+        LW_DSO_CAPEX-SGNDT_PRG = LW_DETAIL-PROGRESS.
+        LW_DSO_CAPEX-SGNDT_1 = LW_DETAIL-TOTAL.
+        LW_DSO_CAPEX-SGNDT_2 = LW_DETAIL-TOTAL_2.
+
+        CASE LW_DETAIL-IS_DELETE.
+          WHEN ABAP_TRUE.
+            LW_DSO_CAPEX-ZSTATUS = 'DELETE'.
+          WHEN ABAP_FALSE.
+            LW_DSO_CAPEX-ZSTATUS = 'SAVE'.
+          WHEN OTHERS.
+        ENDCASE.
+
+        APPEND LW_DSO_CAPEX TO LI_DSO_CAPEX.
+      ENDLOOP.
+
+      IF LI_DSO_CAPEX[] IS NOT INITIAL.
+        EXI_CAPEX[] = LI_DSO_CAPEX[].
+      ENDIF.
+
+    ELSEIF EXI_REVENUE IS REQUESTED.
+      CLEAR LW_DSO_REVENUE.
+*      LW_DSO_REVENUE-0FISCPER = ???
+*- header ------------------------------------------------*
+      LW_DSO_REVENUE-0FISCVARNT = 'K4'.
+      LW_DSO_REVENUE-ZRAB = LW_HEADER-RABNUMBER.
+      LW_DSO_REVENUE-ZCATEGORY = LW_HEADER-BGT_CATEGORY.
+      LW_DSO_REVENUE-0CALYEAR = LW_HEADER-BGT_CYCLE.
+      LW_DSO_REVENUE-ZENTITY = LW_HEADER-ENTITY.
+      LW_DSO_REVENUE-ZPRFITCTR = LW_HEADER-PROFIT_CENTER.
+      LW_DSO_REVENUE-ZACCOUNT = LW_HEADER-GLACC_BASE.
+      LW_DSO_REVENUE-ZBGTSTEP = LW_HEADER-BGT_STEP.
+      LW_DSO_REVENUE-ZBUSAREA = LW_HEADER-BUS_AREA.
+      LW_DSO_REVENUE-ZRPTCURR = LW_HEADER-CURRENCY.
+      LW_DSO_REVENUE-ZSTATUS = 'SAVE'.
+*      LW_DSO_OPEX-ZRPTCURR = 'IDR'.???
+*      LW_DSO_OPEX-ZBUSAREA = 'JM00'.???
+*- detail ------------------------------------------------*
+      LOOP AT LI_DETAIL INTO LW_DETAIL.
+        LW_DSO_REVENUE-ZACTIVITY = LW_DETAIL-ACTIVITY.
+        LW_DSO_REVENUE-0FISCPER = LW_DETAIL-PERIOD.
+        LW_DSO_REVENUE-SGNDT_QTY = LW_DETAIL-QUANTITY.
+        LW_DSO_REVENUE-SGNDT_PRC = LW_DETAIL-PRICE.
+        LW_DSO_REVENUE-SGNDT_1 = LW_DETAIL-TOTAL.
+        LW_DSO_REVENUE-SGNDT_2 = LW_DETAIL-TOTAL_2.
+
+        CASE LW_DETAIL-IS_DELETE.
+          WHEN ABAP_TRUE.
+            LW_DSO_REVENUE-ZSTATUS = 'DELETE'.
+          WHEN ABAP_FALSE.
+            LW_DSO_REVENUE-ZSTATUS = 'SAVE'.
+          WHEN OTHERS.
+        ENDCASE.
+
+        APPEND LW_DSO_REVENUE TO LI_DSO_REVENUE.
+      ENDLOOP.
+
+      IF LI_DSO_REVENUE[] IS NOT INITIAL.
+        EXI_REVENUE[] = LI_DSO_REVENUE[].
+      ENDIF.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -1319,6 +1951,96 @@ CLASS ZCL_BPC_BASIC IMPLEMENTATION.
             " nothing to do
         ENDTRY.
     ENDTRY.
+
+  ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Private Method ZCL_BPC_BASIC=>_IO_FILL_UP_DATA
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IM_IOBJNM                      TYPE        RSDIOBJNM
+* | [--->] IMI_IO_DATA                    TYPE        STANDARD TABLE
+* | [<---] EXI_ATTRIBUTES                 TYPE        ZCL_BPC_BASIC=>TT_IOBJNM
+* | [<---] EXI_IO_DATA                    TYPE        ZCL_BPC_BASIC=>TT_IO_DATA
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+  METHOD _IO_FILL_UP_DATA.
+
+    DATA: LI_COMPONENTS TYPE ZCL_BPC_OBJ_CHA=>TT_COMPONENTS,
+          LW_COMPONENTS TYPE ZCL_BPC_OBJ_CHA=>TS_COMPONENTS,
+          LI_IO_DATA    TYPE ZCL_BPC_BASIC=>TT_IO_DATA,
+          LW_IO_DATA    TYPE ZCL_BPC_BASIC=>TS_IO_DATA,
+          LI_ATTRIBUTES TYPE ZCL_BPC_BASIC=>TT_IOBJNM,
+          LW_ATTRIBUTES TYPE ZCL_BPC_BASIC=>TS_IOBJNM,
+          LW_CPXOBJ     TYPE /BIC/MZCPXOBJ.
+    DATA: LV_IOBJNM         TYPE RSDIOBJNM,
+          LV_FIELDNM        TYPE RSD_FIELDNM,
+          LV_FIELDNAME      TYPE STRING,
+          LV_COUNTER        TYPE I,
+          LV_COUNTER_STRING TYPE STRING.
+    DATA: LO_STRUCT  TYPE REF TO CL_ABAP_STRUCTDESCR,
+          LO_OBJ_CHA TYPE REF TO CL_RSDMDM_OBJ_CHA.
+    FIELD-SYMBOLS: <LI_DATA>  TYPE INDEX TABLE,
+                   <LW_DATA>  TYPE ANY,
+                   <LW_COMP>  TYPE IF_RSD_CHA_PROP=>NT_S_ATR_PROP,
+                   <LV_VALUE> TYPE ANY.
+
+    MOVE IM_IOBJNM TO LV_IOBJNM.
+    CREATE OBJECT LO_OBJ_CHA.
+
+*- Get Component List -------------------------*
+    ZCL_BPC_OBJ_CHA=>IO_GET_COMPONENT_LIST(
+      EXPORTING
+        IM_IOBJNM      = LV_IOBJNM
+      IMPORTING
+        EXI_COMPONENTS = LI_COMPONENTS
+        EXO_OBJ_CHA = LO_OBJ_CHA ).
+
+*- Delete Changed & Objevers -------------------------*
+    DELETE LI_COMPONENTS WHERE ATTRINM = RSD_C_METAIOBJ-CHANGED.
+    DELETE LI_COMPONENTS WHERE ATTRINM = RSD_C_METAIOBJ-OBJVERS.
+
+*- Build Attribute List -------------------------*
+*- & -------------------------*
+*- Build Data & Value -------------------------*
+    ASSIGN IMI_IO_DATA TO <LI_DATA>.
+
+    CLEAR: LV_COUNTER, LV_COUNTER_STRING.
+    LOOP AT <LI_DATA> ASSIGNING <LW_DATA>.
+
+      ADD 1 TO LV_COUNTER.
+      MOVE LV_COUNTER TO LV_COUNTER_STRING.
+      LOOP AT LI_COMPONENTS ASSIGNING <LW_COMP>.
+        UNASSIGN <LV_VALUE>.
+
+        "Only Run Once
+        IF LV_COUNTER EQ 1.
+          CLEAR LW_ATTRIBUTES.
+          LW_ATTRIBUTES-IOBJNM = <LW_COMP>-ATTRINM.
+          APPEND LW_ATTRIBUTES TO LI_ATTRIBUTES.
+        ENDIF.
+
+        LV_FIELDNAME = <LW_COMP>-ATTRINM.
+        ASSIGN COMPONENT LV_FIELDNAME
+        OF STRUCTURE <LW_DATA> TO <LV_VALUE>.
+
+        CLEAR LW_IO_DATA.
+        LW_IO_DATA-RECORD_NO = LV_COUNTER_STRING.
+        LW_IO_DATA-IOBJNM = <LW_COMP>-ATTRINM.
+        LW_IO_DATA-VALUE = <LV_VALUE>.
+        APPEND LW_IO_DATA TO LI_IO_DATA.
+
+      ENDLOOP.
+
+    ENDLOOP.
+
+    IF LI_IO_DATA[] IS NOT INITIAL.
+      EXI_IO_DATA[] = LI_IO_DATA[].
+    ENDIF.
+
+    IF LI_ATTRIBUTES[] IS NOT INITIAL.
+      EXI_ATTRIBUTES[] = LI_ATTRIBUTES[].
+    ENDIF.
+
 
   ENDMETHOD.
 ENDCLASS.
